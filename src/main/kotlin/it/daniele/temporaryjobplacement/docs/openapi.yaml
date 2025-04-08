@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  title: Document API
+  version: "1.0.0"
+  description: API for managing documents.
+paths:
+  /API/documents:
+    get:
+      summary: Retrieves all document metadata with pagination.
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: Page number (must be >= 0).
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          description: Number of items per page (must be > 0).
+        - in: query
+          name: sort
+          required: false
+          schema:
+            type: string
+            enum:
+              - NAME_ASC
+              - NAME_DESC
+              - SIZE_ASC
+              - SIZE_DESC
+              - CREATION_DATE_ASC
+              - CREATION_DATE_DESC
+              - CONTENT_TYPE_ASC
+              - CONTENT_TYPE_DESC
+            default: NAME_ASC
+          description: Sorting option.
+      responses:
+        '200':
+          description: A paginated list of document metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentMetadataDTO'
+                  pageable:
+                    type: object
+                    description: Pagination details.
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  last:
+                    type: boolean
+                  size:
+                    type: integer
+                  number:
+                    type: integer
+                  sort:
+                    type: object
+                  first:
+                    type: boolean
+                  numberOfElements:
+                    type: integer
+                  empty:
+                    type: boolean
+        '400':
+          description: Bad request (e.g., invalid page number or limit).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Uploads a new document.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to be uploaded.
+              required:
+                - file
+      responses:
+        '200':
+          description: Document uploaded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentMetadataDTO'
+        '400':
+          description: Bad request (e.g., missing or invalid file).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - document name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /API/documents/{metadataId}:
+    get:
+      summary: Retrieves document metadata by ID.
+      parameters:
+        - in: path
+          name: metadataId
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: The ID of the document.
+      responses:
+        '200':
+          description: Document metadata found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentMetadataDTO'
+        '400':
+          description: Bad request (e.g., invalid ID).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Document not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Modifies an existing document.
+      parameters:
+        - in: path
+          name: metadataId
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: The ID of the document to be modified.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: (Optional) New file to upload.
+                name:
+                  type: string
+                  description: (Optional) New document name.
+                contentType:
+                  type: string
+                  description: (Optional) New content type for the document.
+      responses:
+        '200':
+          description: Document modified successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentMetadataDTO'
+        '400':
+          description: Bad request (e.g., invalid input).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Document not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - for example, duplicate document name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Deletes a document by ID.
+      parameters:
+        - in: path
+          name: metadataId
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: The ID of the document to be deleted.
+      responses:
+        '204':
+          description: Document deleted successfully (no content returned).
+        '400':
+          description: Bad request (e.g., invalid ID).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Document not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /API/documents/{metadataId}/data:
+    get:
+      summary: Retrieves the binary content of a document for download.
+      parameters:
+        - in: path
+          name: metadataId
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+          description: The ID of the document.
+      responses:
+        '200':
+          description: Binary content returned with appropriate headers.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request (e.g., invalid ID).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Document not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    DocumentMetadataDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          nullable: true
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+        creationTimestamp:
+          type: string
+          format: date-time
+      required:
+        - name
+        - size
+        - contentType
+        - creationTimestamp
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+          nullable: true
+        path:
+          type: string
+      required:
+        - timestamp
+        - status
+        - error
+        - path
+    SortOption:
+      type: string
+      enum:
+        - NAME_ASC
+        - NAME_DESC
+        - SIZE_ASC
+        - SIZE_DESC
+        - CREATION_DATE_ASC
+        - CREATION_DATE_DESC
+        - CONTENT_TYPE_ASC
+        - CONTENT_TYPE_DESC
