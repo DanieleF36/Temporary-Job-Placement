@@ -1,0 +1,12 @@
+package it.daniele.temporaryjobplacement.dtos
+
+import it.daniele.temporaryjobplacement.entities.DocumentBinaryData
+
+data class DocumentBinaryDataDTO(
+    val id: Int = 0,
+    val content: ByteArray,
+    var metadataDTO: DocumentMetadataDTO
+)
+
+fun DocumentBinaryData.toDto(): DocumentBinaryDataDTO =
+        DocumentBinaryDataDTO(this.id, this.content, this.metadata.toDto())
