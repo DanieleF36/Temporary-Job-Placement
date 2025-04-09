@@ -3,6 +3,7 @@ import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.State
 import it.daniele.temporaryjobplacement.services.MessageService
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -26,5 +27,10 @@ class MessageController(private val service: MessageService) {
 
         val allowedSort = listOf("sender", "date", "subject", "body", "channel", "priority", "state")
         return service.getAll(page, limit, validateSort(allowedSort, sort, "date"), state)
+    }
+
+    @GetMapping("/{messageId}")
+    fun get(@PathVariable @Positive(message = "Message id must be > 0") messageId: Int): MessageDTO {
+        return service.get(messageId) ?: throw throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
     }
 }

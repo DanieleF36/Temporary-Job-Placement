@@ -20,4 +20,8 @@ class MessageServiceImpl(
             return messageRepo.findByState(state, pageable).map { it.toDTO() }
         return messageRepo.findAll(pageable).map { it.toDTO() }
     }
+
+    override fun get(messageId: Int): MessageDTO? {
+        if (messageId <= 0) throw IllegalArgumentException("Message Id must be > 0")
+        return messageRepo.findById(messageId).getOrNull()?.toDTO()
 }
