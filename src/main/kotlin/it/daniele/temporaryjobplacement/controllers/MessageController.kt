@@ -44,6 +44,7 @@ class MessageController(private val service: MessageService) {
         @RequestBody channel: Channel,
         @RequestBody @OptionalNotBlank subject: String?,
         @RequestBody @OptionalNotBlank body: String?,
+        @RequestBody date: ZonedDateTime
     ): MessageDTO {
         return service.create(senderId, channel, subject, body, date)
     }
