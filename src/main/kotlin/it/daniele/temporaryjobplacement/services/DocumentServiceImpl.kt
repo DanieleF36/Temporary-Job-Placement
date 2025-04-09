@@ -1,13 +1,12 @@
 package it.daniele.temporaryjobplacement.services
 
-import it.daniele.temporaryjobplacement.controllers.SortOption
 import it.daniele.temporaryjobplacement.dtos.DocumentBinaryDataDTO
 import it.daniele.temporaryjobplacement.dtos.DocumentMetadataDTO
 import it.daniele.temporaryjobplacement.dtos.toDto
 import it.daniele.temporaryjobplacement.entities.DocumentBinaryData
 import it.daniele.temporaryjobplacement.entities.DocumentMetadata
 import it.daniele.temporaryjobplacement.exceptions.DocumentNameAlreadyExists
-import it.daniele.temporaryjobplacement.exceptions.DocumentNotFoundException
+import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.DocumentBinaryRepository
 import it.daniele.temporaryjobplacement.repositories.DocumentMetadataRepository
 import jakarta.transaction.Transactional
@@ -72,7 +71,7 @@ class DocumentServiceImpl(private val repoMeta: DocumentMetadataRepository, priv
         if(contentType?.isBlank() == true) throw IllegalArgumentException("ContentType must be not blank")
 
         val meta = repoMeta.findById(metadataId).getOrNull()
-            ?: throw DocumentNotFoundException("File not found: $metadataId")
+            ?: throw NotFoundException("File not found: $metadataId")
         meta.name = name ?: meta.name
         meta.size = binaryContent?.size ?: meta.size
         meta.contentType = contentType ?: meta.contentType
@@ -86,7 +85,7 @@ class DocumentServiceImpl(private val repoMeta: DocumentMetadataRepository, priv
     override fun delete(id: Int) {
         if(id < 0) throw IllegalArgumentException("ID must be >= 0")
         if(repoMeta.findById(id).isEmpty)
-            throw DocumentNotFoundException("File not found: $id")
+            throw NotFoundException("File not found: $id")
         repoMeta.deleteById(id)
         logger.info("Documento eliminato: $id")
     }
