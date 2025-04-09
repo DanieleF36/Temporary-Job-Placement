@@ -1,7 +1,7 @@
 package it.daniele.temporaryjobplacement.controllers
 
+import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.exceptions.DocumentNameAlreadyExists
-import it.daniele.temporaryjobplacement.exceptions.DocumentNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,17 +19,6 @@ data class ErrorResponse(
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
-    @ExceptionHandler(DocumentNotFoundException::class)
-    fun handleFileNotFoundException(e: DocumentNotFoundException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
-        val error = ErrorResponse(
-            timestamp = LocalDateTime.now(),
-            status = HttpStatus.NOT_FOUND.value(),
-            error = HttpStatus.NOT_FOUND.reasonPhrase,
-            path = request.requestURL.toString(),
-            message = e.message ?: "File not found"
-        )
-        return ResponseEntity(error, HttpStatus.NOT_FOUND)
-    }
 
     @ExceptionHandler(DocumentNameAlreadyExists::class)
     fun handleDocumentNameAlreadyExists(e: DocumentNameAlreadyExists, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
@@ -41,6 +30,18 @@ class GlobalExceptionHandler {
             message = e.message ?: "File not found"
         )
         return ResponseEntity(error, HttpStatus.CONFLICT)
+    }
+
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFoundException(e: NotFoundException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(
+            timestamp = LocalDateTime.now(),
+            status = HttpStatus.NOT_FOUND.value(),
+            error = HttpStatus.NOT_FOUND.reasonPhrase,
+            path = request.requestURL.toString(),
+            message = e.message ?: "not found"
+        )
+        return ResponseEntity(error, HttpStatus.NOT_FOUND)
     }
 
     @ExceptionHandler(IllegalArgumentException::class)
