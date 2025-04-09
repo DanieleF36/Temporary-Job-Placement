@@ -1,35 +1,21 @@
 package it.daniele.temporaryjobplacement.entities.message
 
 enum class State {
-    RECEIVED{
-        fun readMessage(): State{
-            return READ
-        }
-    },
-    READ{
-        fun discardMessage(): State{
-            return DISCARTED
-        }
-        fun processMessage(): State{
-            return PROCESSING
-        }
-        fun completeMessage(): State{
-            return DONE
-        }
-        fun failMessage(): State{
-            return FAILED
-        }
-    },
+    RECEIVED,
+    READ,
     DISCARTED,
-    PROCESSING{
-        fun completeMessage(): State{
-            return DONE
-        }
-        fun failMessage(): State{
-            return FAILED
-        }
-    },
+    PROCESSING,
     DONE,
-    FAILED
+    FAILED;
 
+    fun checkNewState(newState: State): Boolean{
+        return when(this){
+            RECEIVED -> newState == READ
+            READ -> newState == DONE || newState == DISCARTED || newState == PROCESSING || newState == FAILED
+            DISCARTED -> false
+            PROCESSING -> newState == DONE || newState == FAILED
+            DONE -> false
+            FAILED -> false
+        }
+    }
 }
