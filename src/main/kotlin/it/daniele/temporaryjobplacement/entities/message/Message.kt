@@ -10,11 +10,11 @@ class Message(
     @ManyToOne
     val sender: Contact,
     val date: ZonedDateTime,
-    val subject: String?,
-    val body: String?,
+    var subject: String?,
+    var body: String?,
     val channel: Channel,
-    val priority: Int,
-    val state: State,
+    var priority: Int,
+    var state: State,
     @OneToMany(mappedBy = "message", fetch = FetchType.LAZY)
-    val actions: List<Action>,
+    val actions: MutableList<Action>,
 ): EntityBase()
