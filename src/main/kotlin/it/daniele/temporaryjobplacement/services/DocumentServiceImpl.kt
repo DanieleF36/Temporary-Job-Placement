@@ -83,7 +83,6 @@ class DocumentServiceImpl(private val repoMeta: DocumentMetadataRepository, priv
 
         val meta = repoMeta.findById(metadataId).getOrNull()
             ?: throw DocumentNotFoundException("File not found: $metadataId")
-        meta.id = meta.id
         meta.name = name ?: meta.name
         meta.size = binaryContent?.size ?: meta.size
         meta.contentType = contentType ?: meta.contentType

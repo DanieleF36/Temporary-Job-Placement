@@ -12,4 +12,4 @@ data class DocumentMetadataDTO(
 )
 
 fun DocumentMetadata.toDto(): DocumentMetadataDTO =
-    DocumentMetadataDTO(this.id, this.name, this.size, this.contentType, this.creationTimestamp)
+    DocumentMetadataDTO(this.getId(), this.name, this.size, this.contentType, this.creationTimestamp)

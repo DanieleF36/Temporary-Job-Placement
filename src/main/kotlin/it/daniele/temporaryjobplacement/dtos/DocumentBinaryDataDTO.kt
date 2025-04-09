@@ -9,4 +9,4 @@ data class DocumentBinaryDataDTO(
 )
 
 fun DocumentBinaryData.toDto(): DocumentBinaryDataDTO =
-        DocumentBinaryDataDTO(this.id, this.content, this.metadata.toDto())
+        DocumentBinaryDataDTO(this.getId(), this.content, this.metadata.toDto())
