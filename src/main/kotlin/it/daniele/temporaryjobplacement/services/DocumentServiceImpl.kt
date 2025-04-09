@@ -25,21 +25,11 @@ import org.slf4j.LoggerFactory
 class DocumentServiceImpl(private val repoMeta: DocumentMetadataRepository, private val repoBinary: DocumentBinaryRepository): DocumentService {
     private val logger: Logger = LoggerFactory.getLogger(DocumentService::class.java)
 
-    override fun getAll(page: Int, limit: Int, sort: SortOption): Page<DocumentMetadataDTO> {
+    override fun getAll(page: Int, limit: Int, sort: Sort): Page<DocumentMetadataDTO> {
         if (page < 0) throw IllegalArgumentException("Page must be >= 0")
         if (limit <= 0) throw IllegalArgumentException("Limit must be > 0")
 
-        val s = when (sort) {
-            SortOption.NAME_ASC -> Sort.by(Sort.Direction.ASC, "name")
-            SortOption.NAME_DESC -> Sort.by(Sort.Direction.DESC, "name")
-            SortOption.SIZE_ASC -> Sort.by(Sort.Direction.ASC, "size")
-            SortOption.SIZE_DESC -> Sort.by(Sort.Direction.DESC, "size")
-            SortOption.CREATION_DATE_ASC -> Sort.by(Sort.Direction.ASC, "creationTimestamp")
-            SortOption.CREATION_DATE_DESC -> Sort.by(Sort.Direction.DESC, "creationTimestamp")
-            SortOption.CONTENT_TYPE_ASC -> Sort.by(Sort.Direction.ASC, "contentType")
-            SortOption.CONTENT_TYPE_DESC -> Sort.by(Sort.Direction.DESC, "contentType")
-        }
-        val pageable = PageRequest.of(page, limit, s)
+        val pageable = PageRequest.of(page, limit, sort)
 
         return repoMeta.findAll(pageable).map { it.toDto() }
     }

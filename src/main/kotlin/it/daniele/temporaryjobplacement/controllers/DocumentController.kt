@@ -2,6 +2,7 @@ package it.daniele.temporaryjobplacement.controllers
 
 import it.daniele.temporaryjobplacement.dtos.DocumentMetadataDTO
 import it.daniele.temporaryjobplacement.services.DocumentService
+import jakarta.validation.constraints.Min
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -16,30 +17,23 @@ import org.springframework.web.multipart.MultipartFile
 class DocumentController(private val documentService: DocumentService) {
     @GetMapping
     fun getAll(
-        @RequestParam page: Int,
-        @RequestParam(defaultValue = "10") limit: Int,
-        @RequestParam(defaultValue = "NAME_ASC") sort: SortOption
+        @RequestParam(defaultValue = "0") @Min(0, message = "Page number must be >= 0") page: Int,
+        @RequestParam(defaultValue = "10") @Min(0, message = "Limit number must be > 0")limit: Int,
+        @RequestParam sort: String?
     ): Page<DocumentMetadataDTO> {
-        if(page < 0)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Page number must be >= 0")
-        if(limit <= 0)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Limit number must be > 0")
-        return documentService.getAll(page, limit, sort)
+        val allowedSort = listOf("name", "size", "creationTimestamp", "contentType")
+        return documentService.getAll(page, limit, validateSort(allowedSort, sort, "name"))
     }
 
     @GetMapping("/{metadataId}")
-    fun get(@PathVariable metadataId: Int): DocumentMetadataDTO {
-        if(metadataId < 0)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be >= 0")
+    fun get(@PathVariable @Min(0, message = "Id must be >= 0") metadataId: Int): DocumentMetadataDTO {
         val meta = documentService.get(metadataId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
         return meta
     }
 
     @GetMapping("/{metadataId}/data")
-    fun getData(@PathVariable metadataId: Int): ResponseEntity<ByteArray> {
-        if(metadataId < 0)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be >= 0")
+    fun getData(@PathVariable @Min(0, message = "Id must be >= 0") metadataId: Int): ResponseEntity<ByteArray> {
         val data = documentService.getData(metadataId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(data.metadataDTO.contentType))
@@ -58,21 +52,17 @@ class DocumentController(private val documentService: DocumentService) {
 
     @PutMapping("/{metadataId}")
     fun modify(
-        @PathVariable metadataId: Int,
+        @PathVariable @Min(0, message = "Id must be >= 0") metadataId: Int,
         @RequestParam("file", required = false) file: MultipartFile?,
         @RequestParam("name", required = false) name: String?,
         @RequestParam("contentType", required = false) contentType: String?
     ): DocumentMetadataDTO{
-        if(metadataId < 0)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be >= 0")
         if(name?.isBlank() == true)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "name must be not blank")
         return documentService.modify(metadataId, name, contentType, file?.bytes)
     }
     @DeleteMapping("/{metadataId}")
-    fun delete(@PathVariable metadataId: Int){
-        if(metadataId < 0)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "id must be >= 0")
+    fun delete(@PathVariable @Min(0, message = "Id must be >= 0") metadataId: Int){
         return documentService.delete(metadataId)
     }
 }
