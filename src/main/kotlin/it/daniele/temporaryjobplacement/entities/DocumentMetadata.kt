@@ -9,10 +9,10 @@ data class DocumentMetadata(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0,
 
-    val name: String,
-    val size: Int,
+    var name: String,
+    var size: Int,
     @Column(name = "content_type")
-    val contentType: String,
+    var contentType: String,
     @Column(name = "creation_timestamp")
     val creationTimestamp: ZonedDateTime,
 
