@@ -4,11 +4,7 @@ import jakarta.persistence.*
 import java.time.ZonedDateTime
 
 @Entity
-data class DocumentMetadata(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0,
-
+class DocumentMetadata(
     var name: String,
     var size: Int,
     @Column(name = "content_type")
@@ -20,4 +16,4 @@ data class DocumentMetadata(
     @MapsId
     @JoinColumn(name = "id")
     var binaryContent: DocumentBinaryData? = null,
-)
+): EntityBase()
