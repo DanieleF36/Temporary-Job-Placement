@@ -1,4 +1,5 @@
 package it.daniele.temporaryjobplacement.controllers
+import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.time.ZonedDateTime
 
@@ -47,5 +49,15 @@ class MessageController(private val service: MessageService) {
         @RequestBody date: ZonedDateTime
     ): MessageDTO {
         return service.create(senderId, channel, subject, body, date)
+    }
+
+    @PostMapping("/{messageId}")
+    fun changeState(
+        @PathVariable @Positive(message = "Message id must be > 0") messageId: Int,
+        @RequestBody newState: State,
+        @RequestBody @OptionalNotBlank comment: String?
+    ): MessageDTO {
+        //TODO forse questo va fatto nell'action service?
+        return service.changeState(messageId, newState, comment)
     }
 }

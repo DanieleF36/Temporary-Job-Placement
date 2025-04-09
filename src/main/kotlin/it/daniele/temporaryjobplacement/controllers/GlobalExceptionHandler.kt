@@ -2,6 +2,7 @@ package it.daniele.temporaryjobplacement.controllers
 
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.exceptions.DocumentNameAlreadyExists
+import it.daniele.temporaryjobplacement.exceptions.WrongNewStateException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -54,5 +55,17 @@ class GlobalExceptionHandler {
             message = e.message ?: "Internal error"
         )
         return ResponseEntity(error, HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+
+    @ExceptionHandler(WrongNewStateException::class)
+    fun handleWrongNewStateException(e: WrongNewStateException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(
+            timestamp = LocalDateTime.now(),
+            status = HttpStatus.UNPROCESSABLE_ENTITY.value(),
+            error = HttpStatus.UNPROCESSABLE_ENTITY.reasonPhrase,
+            path = request.requestURL.toString(),
+            message = e.message ?: "newState is not a valid"
+        )
+        return ResponseEntity(error, HttpStatus.UNPROCESSABLE_ENTITY)
     }
 }
