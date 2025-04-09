@@ -1,4 +1,6 @@
 package it.daniele.temporaryjobplacement.services
+
+import it.daniele.temporaryjobplacement.dtos.ActionDTO
 import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.dtos.toDTO
 import it.daniele.temporaryjobplacement.entities.message.Action
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service
 import java.time.ZonedDateTime
 import kotlin.jvm.optionals.getOrNull
 import org.hibernate.Hibernate
+
 @Service
 @Transactional
 class MessageServiceImpl(
@@ -73,5 +76,11 @@ class MessageServiceImpl(
             message.actions.add(newAction)
         }
         return message.toDTO()
+    }
+
+    override fun getActionHistory(messageId: Int): List<ActionDTO> {
+        if (messageId <= 0) throw IllegalArgumentException("Message Id must be > 0")
+        val message = messageRepo.findById(messageId).getOrNull() ?: throw NotFoundException("Message not found $messageId")
+        return message.actions.map { it.toDTO() }
     }
 }

@@ -1,4 +1,6 @@
 package it.daniele.temporaryjobplacement.services
+
+import it.daniele.temporaryjobplacement.dtos.ActionDTO
 import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
@@ -11,4 +13,5 @@ interface MessageService {
     fun get(messageId: Int): MessageDTO?
     fun create(senderId: Int, channel: Channel, subject: String?, body: String?, date: ZonedDateTime): MessageDTO
     fun changeState(messageId: Int, newState: State, comment: String?): MessageDTO
+    fun getActionHistory(messageId: Int): List<ActionDTO>
 }

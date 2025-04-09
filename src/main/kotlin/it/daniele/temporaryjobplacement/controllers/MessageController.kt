@@ -1,5 +1,7 @@
 package it.daniele.temporaryjobplacement.controllers
+
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
+import it.daniele.temporaryjobplacement.dtos.ActionDTO
 import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
@@ -59,5 +61,10 @@ class MessageController(private val service: MessageService) {
     ): MessageDTO {
         //TODO forse questo va fatto nell'action service?
         return service.changeState(messageId, newState, comment)
+    }
+
+    @GetMapping("/{messageId}/history")
+    fun getHistory(@PathVariable @Positive(message = "Message id must be > 0")messageId: Int): List<ActionDTO>{
+        return service.getActionHistory(messageId)
     }
 }
