@@ -22,4 +22,4 @@ data class MessageDTO(
 )
 
 fun Message.toDTO(): MessageDTO=
-    MessageDTO(this.getId(), sender.toDTO(), date, subject, body, channel, priority, state, actions.map { it.toDTO() })
+    MessageDTO(this.getId(), sender.toDTO(), date, channel, state, actions.map { it.toDTO() }, subject, body, priority)
