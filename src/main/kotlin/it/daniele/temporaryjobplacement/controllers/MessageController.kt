@@ -67,4 +67,12 @@ class MessageController(private val service: MessageService) {
     fun getHistory(@PathVariable @Positive(message = "Message id must be > 0")messageId: Int): List<ActionDTO>{
         return service.getActionHistory(messageId)
     }
+
+    @PutMapping("/{messageId}/priority")
+    fun changePriority(
+        @PathVariable @Positive(message = "Message id must be > 0")messageId: Int,
+        @RequestBody @Min(0, message = "Priority must be >= 0")priority: Int,
+    ): MessageDTO {
+        return service.changePriority(messageId, priority)
+    }
 }

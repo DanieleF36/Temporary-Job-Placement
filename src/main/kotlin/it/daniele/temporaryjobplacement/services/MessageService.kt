@@ -14,4 +14,5 @@ interface MessageService {
     fun create(senderId: Int, channel: Channel, subject: String?, body: String?, date: ZonedDateTime): MessageDTO
     fun changeState(messageId: Int, newState: State, comment: String?): MessageDTO
     fun getActionHistory(messageId: Int): List<ActionDTO>
+    fun changePriority(messageId: Int, priority: Int): MessageDTO
 }

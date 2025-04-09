@@ -83,4 +83,12 @@ class MessageServiceImpl(
         val message = messageRepo.findById(messageId).getOrNull() ?: throw NotFoundException("Message not found $messageId")
         return message.actions.map { it.toDTO() }
     }
+
+    override fun changePriority(messageId: Int, priority: Int): MessageDTO {
+        if (messageId <= 0) throw IllegalArgumentException("Message Id must be > 0")
+        if (priority < 0) throw IllegalArgumentException("Priority must be >= 0")
+        val message = messageRepo.findById(messageId).getOrNull() ?: throw NotFoundException("Message not found $messageId")
+        message.priority = priority
+        return message.toDTO()
+    }
 }
