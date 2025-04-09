@@ -83,21 +83,15 @@ class DocumentServiceImpl(private val repoMeta: DocumentMetadataRepository, priv
 
         val meta = repoMeta.findById(metadataId).getOrNull()
             ?: throw DocumentNotFoundException("File not found: $metadataId")
-        val modifiedMeta = DocumentMetadata(
-            id = meta.id,
-            name = name ?: meta.name,
-            size = binaryContent?.size ?: meta.size,
-            contentType = contentType ?: meta.contentType,
-            creationTimestamp = meta.creationTimestamp,
-        )
-        val content = DocumentBinaryData(
-            content = binaryContent ?: meta.binaryContent!!.content,
-            metadata = modifiedMeta
-        )
-        modifiedMeta.binaryContent = content
-        repoMeta.save(modifiedMeta)
+        meta.id = meta.id
+        meta.name = name ?: meta.name
+        meta.size = binaryContent?.size ?: meta.size
+        meta.contentType = contentType ?: meta.contentType
+
+        if(binaryContent != null)
+            meta.binaryContent!!.content = binaryContent
         logger.info("Documento modificato: $metadataId")
-        return modifiedMeta.toDto()
+        return meta.toDto()
     }
 
     override fun delete(id: Int) {
