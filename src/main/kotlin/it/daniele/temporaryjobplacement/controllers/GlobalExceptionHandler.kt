@@ -27,7 +27,7 @@ class GlobalExceptionHandler {
             status = HttpStatus.CONFLICT.value(),
             error = HttpStatus.CONFLICT.reasonPhrase,
             path = request.requestURL.toString(),
-            message = e.message ?: "File not found"
+            message = e.message ?: "File name already exists"
         )
         return ResponseEntity(error, HttpStatus.CONFLICT)
     }
