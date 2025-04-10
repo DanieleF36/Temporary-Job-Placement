@@ -7,8 +7,6 @@ import java.time.ZonedDateTime
 @Entity
 class Action(
     @ManyToOne
-    @MapsId
-    @JoinColumn(name = "id")
     val message: Message? = null,
     val state: State,
     val date: ZonedDateTime,
