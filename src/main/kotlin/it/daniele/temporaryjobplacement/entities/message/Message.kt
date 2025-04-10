@@ -15,6 +15,6 @@ class Message(
     val channel: Channel,
     var priority: Int,
     var state: State,
-    @OneToMany(mappedBy = "message", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "message", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     val actions: MutableList<Action>,
 ): EntityBase()
