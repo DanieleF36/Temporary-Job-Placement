@@ -61,7 +61,7 @@ class MessageServiceImpl(
 
     override fun changeState(messageId: Int, newState: State, comment: String?): MessageDTO {
         if (messageId <= 0) throw IllegalArgumentException("Message Id must be > 0")
-        val message = messageRepo.findById(messageId).getOrNull() ?: throw NotFoundException("Message id not found")
+        val message = messageRepo.findById(messageId).getOrNull() ?: throw NotFoundException("Message id not found: $messageId")
         if(!message.state.checkNewState(newState))
             throw WrongNewStateException("$newState is not a valid new state for ${message.state}")
         message.state = newState
