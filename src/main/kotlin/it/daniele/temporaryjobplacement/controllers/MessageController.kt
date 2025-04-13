@@ -22,8 +22,8 @@ class MessageController(private val service: MessageService) {
     fun getAll(
         @RequestParam(defaultValue = "0") @Min(0, message = "Page number must be >= 0") page: Int,
         @RequestParam(defaultValue = "10") @Positive(message = "Limit number must be > 0")limit: Int,
-        @RequestParam sort: String?,
-        @RequestParam(defaultValue = "received") filter: String?
+        @RequestParam(defaultValue = "date") sort: String?,
+        @RequestParam filter: String?
     ): Page<MessageDTO> {
         val state = filter?.let {
             try {
