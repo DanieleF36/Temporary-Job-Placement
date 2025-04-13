@@ -1,6 +1,5 @@
 package it.daniele.temporaryjobplacement.controllers
 
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
@@ -25,6 +24,6 @@ fun validateSort(allowedSort: List<String>, sort: String?, default: String): Sor
             Sort.by(sortField)
         }
     } else {
-        Sort.by("default").descending()
+        Sort.by(default).descending()
     }
 }
