@@ -11,6 +11,6 @@ class Telephone (
     val prefix: Int,
     @Column
     val number: Int,
-    @OneToMany
+    @OneToMany(mappedBy = "telephone")
     val contact: List<Contact>
 ): EntityBase()

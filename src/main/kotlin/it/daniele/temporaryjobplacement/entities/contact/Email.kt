@@ -9,6 +9,6 @@ import jakarta.persistence.OneToMany
 class Email(
     @Column(unique = true, nullable = false)
     val email: String,
-    @OneToMany
+    @OneToMany(mappedBy = "email")
     val contact: List<Contact>
 ): EntityBase()

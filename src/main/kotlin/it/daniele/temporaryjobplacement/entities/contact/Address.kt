@@ -10,6 +10,6 @@ import jakarta.persistence.OneToMany
 class Address(
     @Column(unique = true, nullable = false)
     var address: String,
-    @OneToMany
+    @OneToMany(mappedBy = "address")
     val contact: List<Contact>
 ): EntityBase()
