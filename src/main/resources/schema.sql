@@ -14,21 +14,6 @@ CREATE TABLE document_metadata (
 );
 
 -- CONTACT
-CREATE TABLE contact (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    surname VARCHAR(255) NOT NULL,
-    email_id INT,
-    address_id INT,
-    telephone_id INT,
-    ssn VARCHAR(255),
-    category INT NOT NULL,
-    CONSTRAINT fk_contact_email FOREIGN KEY (email_id) REFERENCES email(id),
-    CONSTRAINT fk_contact_address FOREIGN KEY (address_id) REFERENCES address(id),
-    CONSTRAINT fk_contact_telephone FOREIGN KEY (telephone_id) REFERENCES telephone(id),
-    CONSTRAINT chk_contact_category CHECK (category IN (0, 1, 2))
-);
-
 CREATE TABLE address (
     id SERIAL PRIMARY KEY,
     address VARCHAR(255) NOT NULL UNIQUE
@@ -43,6 +28,21 @@ CREATE TABLE telephone (
     id SERIAL PRIMARY KEY,
     prefix INT NOT NULL,
     number INT NOT NULL
+);
+
+CREATE TABLE contact (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    surname VARCHAR(255) NOT NULL,
+    email_id INT,
+    address_id INT,
+    telephone_id INT,
+    ssn VARCHAR(255),
+    category INT NOT NULL,
+    CONSTRAINT fk_contact_email FOREIGN KEY (email_id) REFERENCES email(id),
+    CONSTRAINT fk_contact_address FOREIGN KEY (address_id) REFERENCES address(id),
+    CONSTRAINT fk_contact_telephone FOREIGN KEY (telephone_id) REFERENCES telephone(id),
+    CONSTRAINT chk_contact_category CHECK (category IN (0, 1, 2))
 );
 
 -- MESSAGE
