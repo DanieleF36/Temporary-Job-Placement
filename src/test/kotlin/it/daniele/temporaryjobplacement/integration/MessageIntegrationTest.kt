@@ -221,4 +221,45 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "POST with non-existing sender should return 404 NOT_FOUND")
     }
+
+    /****************changeState*******************/
+    @Test
+    fun testChangeStateValid() {
+        val json = """{"newState": "READ", "comment": "comment"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages/1", request, String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "POST to change state should return 200 OK")
+        val msg: MessageDTO = mapper.readValue(response.body!!)
+        assertEquals(1, msg.id, "Message ID should remain 1")
+        assertEquals("READ", msg.state.toString(), "State should be updated to READ")
+    }
+
+    @Test
+    fun testChangeStateInvalidId() {
+        val json = """{"newState": "invalid", "comment": "comment"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages/0", request, String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "POST with invalid ID should return 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun testChangeStateMessageNotFound() {
+        val json = """{"newState": "READ", "comment": "comment"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages/999", request, String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "POST for non-existing message should return 404 NOT_FOUND")
+    }
+
+    @Test
+    fun testChangeStateInvalidTransition() {
+        val json = """{"newState": "DONE", "comment": "comment"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages/1", request, String::class.java)
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode, "Invalid state transition should return 422 UNPROCESSABLE_ENTITY")
+    }
+
 }
