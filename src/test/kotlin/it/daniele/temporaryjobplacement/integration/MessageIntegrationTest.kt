@@ -3,7 +3,7 @@ package it.daniele.temporaryjobplacement.integration
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import it.daniele.temporaryjobplacement.dtos.MessageDTO
+import it.daniele.temporaryjobplacement.dtos.message.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
 import org.junit.jupiter.api.Test
@@ -49,15 +49,7 @@ class MessageControllerIntegrationTest : IntegrationTest() {
 
         assertEquals(1, msg1.priority, "Message 1 priority should be 1")
         assertEquals(Channel.TEXT_MESSAGE, msg1.channel, "Message 1 channel should be TEXT_MESSAGE")
-        with(msg1.sender) {
-            assertEquals(1, id, "Sender 1 id should be 1")
-            assertEquals("Mario", name, "Sender 1 name should be 'Mario'")
-            assertEquals("Rossi", surname, "Sender 1 surname should be 'Rossi'")
-            assertEquals("example1@example.com", email, "Sender 1 email should be 'example1@example.com'")
-            assertEquals("Via Roma 1, Rome", address, "Sender 1 address should be 'Via Roma 1, Rome'")
-            assertEquals("39123456789", telephone, "Sender 1 telephone should be '39123456789'")
-            assertEquals("RSSMRA80A01H501U", ssn, "Sender 1 SSN should be 'RSSMRA80A01H501U'")
-        }
+        assertEquals(1, msg1.senderId, "Sender ID for message 1 should be 1")
 
         val msg2 = pageResponse.content.find { it.id == 2 }
         assertNotNull(msg2, "Message with ID 2 should be present")
@@ -67,15 +59,7 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         assertEquals(ZonedDateTime.parse("2025-04-13T15:00:00Z"), msg2.date, "Message 2 date should match")
         assertEquals(2, msg2.priority, "Message 2 priority should be 2")
         assertEquals(Channel.EMAIL, msg2.channel, "Message 2 channel should be EMAIL")
-        with(msg2.sender) {
-            assertEquals(2, id, "Sender 2 id should be 2")
-            assertEquals("Luigi", name, "Sender 2 name should be 'Luigi'")
-            assertEquals("Verdi", surname, "Sender 2 surname should be 'Verdi'")
-            assertEquals("example2@example.com", email, "Sender 2 email should be 'example2@example.com'")
-            assertEquals("Via Milano 2, Milan", address, "Sender 2 address should be 'Via Milano 2, Milan'")
-            assertEquals("39987654321", telephone, "Sender 2 telephone should be '39987654321'")
-            assertEquals("VRDLGU80B02H502U", ssn, "Sender 2 SSN should be 'VRDLGU80B02H502U'")
-        }
+        assertEquals(2, msg2.senderId, "Sender ID for message 2 should be 2")
     }
 
     @Test
@@ -94,15 +78,7 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         assertEquals(ZonedDateTime.parse("2025-04-13T15:00:00Z"), msg.date, "Date should match")
         assertEquals(2, msg.priority, "Priority should be 2")
         assertEquals(Channel.EMAIL, msg.channel, "Channel should be EMAIL")
-        with(msg.sender) {
-            assertEquals(2, id, "Sender id should be 2")
-            assertEquals("Luigi", name, "Sender name should be 'Luigi'")
-            assertEquals("Verdi", surname, "Sender surname should be 'Verdi'")
-            assertEquals("example2@example.com", email, "Sender email should be 'example2@example.com'")
-            assertEquals("Via Milano 2, Milan", address, "Sender address should be 'Via Milano 2, Milan'")
-            assertEquals("39987654321", telephone, "Sender telephone should be '39987654321'")
-            assertEquals("VRDLGU80B02H502U", ssn, "Sender SSN should be 'VRDLGU80B02H502U'")
-        }
+        assertEquals(2, msg.senderId, "Sender ID for message 2 should be 2")
     }
 
     @Test
