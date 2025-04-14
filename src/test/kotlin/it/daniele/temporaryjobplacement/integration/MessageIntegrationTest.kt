@@ -111,4 +111,33 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "Invalid filter should return 400 BAD_REQUEST")
     }
 
+    /****************get*******************/
+    @Test
+    fun testGetExistingMessage() {
+        val response = restTemplate.getForEntity("/API/messages/1", String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "GET /API/messages/1 should return 200 OK")
+        val msg: MessageDTO = mapper.readValue(response.body!!)
+        assertEquals(1, msg.id, "Message ID should be 1")
+        assertEquals("Hello", msg.subject, "Subject should be 'Hello'")
+        assertEquals("First message body", msg.body, "Body should be 'First message body'")
+        assertEquals(State.RECEIVED, msg.state, "State should be RECEIVED")
+        assertEquals(ZonedDateTime.parse("2025-04-13T14:00:00Z"), msg.date, "Date should match")
+        assertEquals(1, msg.priority, "Priority should be 1")
+        assertEquals(Channel.TEXT_MESSAGE, msg.channel, "Channel should be TEXT_MESSAGE")
+        assertEquals(1, msg.senderId, "Sender ID should be 1")
+
+    }
+
+    @Test
+    fun testGetNonExistingMessage() {
+        val response = restTemplate.getForEntity("/API/messages/999", String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "GET non-existing message should return 404 NOT_FOUND")
+    }
+
+    @Test
+    fun testGetInvalidId() {
+        val response = restTemplate.getForEntity("/API/messages/0", String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "GET with invalid ID should return 400 BAD_REQUEST")
+    }
+
 }
