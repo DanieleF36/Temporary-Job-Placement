@@ -7,7 +7,7 @@ import java.time.ZonedDateTime
 
 @Entity
 class Message(
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     val sender: Contact,
     val date: ZonedDateTime,
     var subject: String?,

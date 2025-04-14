@@ -2,10 +2,12 @@ package it.daniele.temporaryjobplacement.controllers
 
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.ActionDTO
-import it.daniele.temporaryjobplacement.dtos.MessageDTO
+import it.daniele.temporaryjobplacement.dtos.message.CreateMessageDTO
+import it.daniele.temporaryjobplacement.dtos.message.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
 import it.daniele.temporaryjobplacement.services.MessageService
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Page
@@ -43,14 +45,8 @@ class MessageController(private val service: MessageService) {
     }
 
     @PostMapping
-    fun create(
-        @RequestBody @Positive(message = "Sender id must be > 0")senderId: Int,
-        @RequestBody channel: Channel,
-        @RequestBody @OptionalNotBlank subject: String?,
-        @RequestBody @OptionalNotBlank body: String?,
-        @RequestBody date: ZonedDateTime
-    ): MessageDTO {
-        return service.create(senderId, channel, subject, body, date)
+    fun create(@RequestBody @Valid message: CreateMessageDTO): MessageDTO {
+        return service.create(message.senderId, message.channel, message.subject, message.body, message.date)
     }
 
     @PostMapping("/{messageId}")
