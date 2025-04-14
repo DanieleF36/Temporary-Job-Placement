@@ -285,4 +285,44 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "GET history for non-existing message should return 404 NOT_FOUND")
     }
 
+    /****************changePriority*******************/
+    @Test
+    fun testChangePriorityValid() {
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity("5", headers)
+        val response = restTemplate.exchange("/API/messages/1/priority", HttpMethod.PUT, request, String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "PUT with valid data should return 200 OK")
+        val msg: MessageDTO = mapper.readValue(response.body!!)
+        assertEquals(5, msg.priority, "Priority should be updated to 5")
+        assertEquals(1, msg.id, "Message ID should remain 1")
+
+        assertEquals("Hello", msg.subject, "Subject should remain unchanged")
+        assertEquals("First message body", msg.body, "Body should remain unchanged")
+        assertEquals(State.RECEIVED, msg.state, "State should remain unchanged")
+        assertEquals(Channel.TEXT_MESSAGE, msg.channel, "Channel should remain unchanged")
+    }
+
+    @Test
+    fun testChangePriorityInvalidId() {
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity("-5", headers)
+        val response = restTemplate.exchange("/API/messages/0/priority", HttpMethod.PUT, request, String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "PUT with invalid ID should return 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun testChangePriorityInvalidPriority() {
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity("-1", headers)
+        val response = restTemplate.exchange("/API/messages/1/priority", HttpMethod.PUT, request, String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "PUT with negative priority should return 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun testChangePriorityMessageNotFound() {
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity("5", headers)
+        val response = restTemplate.exchange("/API/messages/999/priority", HttpMethod.PUT, request, String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "PUT for non-existing message should return 404 NOT_FOUND")
+    }
 }
