@@ -140,4 +140,85 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "GET with invalid ID should return 400 BAD_REQUEST")
     }
 
+    /****************create*******************/
+    @Test
+    fun testCreateValidMessage() {
+        val json = """{"senderId": 1, "channel": "TEXT_MESSAGE", "subject": "Test subject", "body" :"Test body", "date":"2025-04-13T16:00:00Z"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
+        val msg: MessageDTO = mapper.readValue(response.body!!)
+        assertTrue(msg.id > 0, "Created message should have an ID greater than 0")
+        assertEquals("Test subject", msg.subject, "Subject should match input")
+        assertEquals("Test body", msg.body, "Body should match input")
+        assertEquals(State.RECEIVED, msg.state, "State should default to RECEIVED")
+        assertEquals(ZonedDateTime.parse("2025-04-13T16:00:00Z"), msg.date, "Date should match input")
+        assertEquals(0, msg.priority, "Default priority should be 0")
+        assertEquals(Channel.TEXT_MESSAGE, msg.channel, "Channel should match input")
+        assertEquals(1, msg.senderId, "Sender ID should be 1")
+    }
+
+    @Test
+    fun testCreateInvalidSenderId() {
+        val json = """[0, "TEXT_MESSAGE", "Test subject", "Test body", "2025-04-13T16:00:00Z"]"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "POST with invalid sender ID should return 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun testCreateInvalidChannel(){
+        val json = """[1, "MESSAGE", "Test subject", "Test body", "2025-04-13T16:00:00Z"]"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "POST with invalid sender ID should return 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun testCreateNullSubject(){
+        val json = """{"senderId": 1, "channel": "TEXT_MESSAGE", "subject": null, "body": "Test body", "date": "2025-04-13T16:00:00Z"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
+        val msg: MessageDTO = mapper.readValue(response.body!!)
+        assertTrue(msg.id > 0, "Created message should have an ID greater than 0")
+        assertEquals(null, msg.subject, "Subject should match input")
+        assertEquals("Test body", msg.body, "Body should match input")
+        assertEquals(State.RECEIVED, msg.state, "State should default to RECEIVED")
+        assertEquals(ZonedDateTime.parse("2025-04-13T16:00:00Z"), msg.date, "Date should match input")
+        assertEquals(0, msg.priority, "Default priority should be 0")
+        assertEquals(Channel.TEXT_MESSAGE, msg.channel, "Channel should match input")
+        assertEquals(1, msg.senderId, "Sender ID should be 1")
+    }
+
+    @Test
+    fun testCreateNullBody(){
+        val json = """{"senderId": 1, "channel": "TEXT_MESSAGE", "subject": "Test subject", "body": null, "date": "2025-04-13T16:00:00Z"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
+        val msg: MessageDTO = mapper.readValue(response.body!!)
+        assertTrue(msg.id > 0, "Created message should have an ID greater than 0")
+        assertEquals("Test subject", msg.subject, "Subject should match input")
+        assertEquals(null, msg.body, "Body should match input")
+        assertEquals(State.RECEIVED, msg.state, "State should default to RECEIVED")
+        assertEquals(ZonedDateTime.parse("2025-04-13T16:00:00Z"), msg.date, "Date should match input")
+        assertEquals(0, msg.priority, "Default priority should be 0")
+        assertEquals(Channel.TEXT_MESSAGE, msg.channel, "Channel should match input")
+        assertEquals(1, msg.senderId, "Sender ID should be 1")
+    }
+
+    @Test
+    fun testCreateSenderNotFound() {
+        val json = """{"senderId": 999, "channel": "TEXT_MESSAGE", "subject": "Test subject", "body": null, "date": "2025-04-13T16:00:00Z"}"""
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(json, headers)
+        val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "POST with non-existing sender should return 404 NOT_FOUND")
+    }
 }
