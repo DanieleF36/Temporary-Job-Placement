@@ -3,6 +3,7 @@ package it.daniele.temporaryjobplacement.integration
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import it.daniele.temporaryjobplacement.dtos.ActionDTO
 import it.daniele.temporaryjobplacement.dtos.message.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
@@ -260,6 +261,28 @@ class MessageControllerIntegrationTest : IntegrationTest() {
         val request = HttpEntity(json, headers)
         val response = restTemplate.postForEntity("/API/messages/1", request, String::class.java)
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode, "Invalid state transition should return 422 UNPROCESSABLE_ENTITY")
+    }
+
+    /****************getHistory*******************/
+    @Test
+    fun testGetHistory() {
+        val response = restTemplate.getForEntity("/API/messages/1/history", String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode, "GET /API/messages/2/history should return 200 OK")
+        val history: List<ActionDTO> = mapper.readValue(response.body!!)
+        assertEquals(1, history.size, "History should have just 1 action")
+        assertEquals("Action comment 1", history[0].comment, "History comment is different")
+    }
+
+    @Test
+    fun testGetHistoryInvalidId() {
+        val response = restTemplate.getForEntity("/API/messages/0/history", String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode, "GET /API/messages/0/history should return 400 BAD_REQUEST")
+    }
+
+    @Test
+    fun testGetHistoryMessageNotFound() {
+        val response = restTemplate.getForEntity("/API/messages/999/history", String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode, "GET history for non-existing message should return 404 NOT_FOUND")
     }
 
 }
