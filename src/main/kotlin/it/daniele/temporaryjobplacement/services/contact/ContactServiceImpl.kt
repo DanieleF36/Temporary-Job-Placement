@@ -2,7 +2,14 @@ package it.daniele.temporaryjobplacement.services.contact
 
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.dtos.toDTO
+import it.daniele.temporaryjobplacement.entities.contact.Address
+import it.daniele.temporaryjobplacement.entities.contact.Contact
+import it.daniele.temporaryjobplacement.entities.contact.Email
+import it.daniele.temporaryjobplacement.entities.contact.Telephone
+import it.daniele.temporaryjobplacement.repositories.AddressRepository
 import it.daniele.temporaryjobplacement.repositories.ContactRepository
+import it.daniele.temporaryjobplacement.repositories.EmailRepository
+import it.daniele.temporaryjobplacement.repositories.TelephoneRepository
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -12,7 +19,12 @@ import kotlin.jvm.optionals.getOrNull
 
 @Service
 @Transactional
-class ContactServiceImpl(private val contactRepo: ContactRepository): ContactService {
+class ContactServiceImpl(
+    private val contactRepo: ContactRepository,
+    private val emailRepository: EmailRepository,
+    private val addressRepository: AddressRepository,
+    private val telephoneRepository: TelephoneRepository
+): ContactService {
     override fun getAll(page: Int, limit: Int, sort: Sort, name: String?, surname: String?, email: String?, telephone: String?): Page<ContactDTO> {
         if (page < 0) throw IllegalArgumentException("Page must be >= 0")
         if (limit <= 0) throw IllegalArgumentException("Limit must be > 0")
@@ -76,5 +88,45 @@ class ContactServiceImpl(private val contactRepo: ContactRepository): ContactSer
     override fun get(contactId: Int): ContactDTO? {
         if (contactId <= 0) throw IllegalArgumentException("id must be > 0")
         return contactRepo.findById(contactId).getOrNull()?.toDTO()
+    }
+
+    override fun create(contactDTO: ContactDTO): ContactDTO {
+        val emailEntity = contactDTO.email?.let { emailStr ->
+            val emails = emailRepository.findByEmail(emailStr)
+            if(emails.size == 0)
+                emailRepository.save(Email(emailStr, emptyList()))
+            else
+                emails[0]
+        }
+
+        val addressEntity = contactDTO.address?.let { addrStr ->
+            val adds = addressRepository.findByAddress(addrStr)
+            if(adds.size == 0)
+                addressRepository.save(Address(addrStr, emptyList()))
+            else
+                adds[0]
+        }
+
+        val telephoneEntity = contactDTO.telephone?.let { telStr ->
+            val prefix = telStr.subSequence(0, 2).toString().toInt()
+            val number = telStr.subSequence(2, telStr.length).toString().toInt()
+            val tels = telephoneRepository.findByPrefixAndNumber(prefix, number)
+            if(tels.size == 0)
+                telephoneRepository.save(Telephone(prefix, number, emptyList()))
+            else
+                tels[0]
+        }
+
+        val contact = Contact(
+            name = contactDTO.name,
+            surname = contactDTO.surname,
+            email = emailEntity,
+            address = addressEntity,
+            telephone = telephoneEntity,
+            ssn = contactDTO.ssn,
+            category = contactDTO.category
+        )
+
+        return contactRepo.save(contact).toDTO()
     }
 }

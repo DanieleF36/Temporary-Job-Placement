@@ -33,4 +33,7 @@ class ContactController(private val service: ContactService) {
         val contact = service.get(contactId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
         return contact
     }
+
+    @PostMapping
+    fun create(@Valid @RequestBody contactDTO: ContactDTO): ContactDTO = service.create(contactDTO)
 }
