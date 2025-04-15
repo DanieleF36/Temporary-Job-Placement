@@ -5,6 +5,7 @@ import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
@@ -36,4 +37,7 @@ class ContactController(private val service: ContactService) {
 
     @PostMapping
     fun create(@Valid @RequestBody contactDTO: ContactDTO): ContactDTO = service.create(contactDTO)
+
+    @PostMapping("/{contactId}/emails")
+    fun addEmail(@PathVariable contactId: String, @RequestBody @NotBlank email: String): ContactDTO = service.addNewMail(contactId, email)
 }

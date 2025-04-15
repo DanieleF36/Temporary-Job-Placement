@@ -6,6 +6,7 @@ import it.daniele.temporaryjobplacement.entities.contact.Address
 import it.daniele.temporaryjobplacement.entities.contact.Contact
 import it.daniele.temporaryjobplacement.entities.contact.Email
 import it.daniele.temporaryjobplacement.entities.contact.Telephone
+import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.AddressRepository
 import it.daniele.temporaryjobplacement.repositories.ContactRepository
 import it.daniele.temporaryjobplacement.repositories.EmailRepository
@@ -134,5 +135,16 @@ class ContactServiceImpl(
         )
 
         return contactRepo.save(contact).toDTO()
+    }
+
+    override fun addNewMail(contactId: Int, email: String): ContactDTO {
+        if (contactId <= 0) throw IllegalArgumentException("id must be > 0")
+        if(email.isBlank()) throw IllegalArgumentException("email must be not blank")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val emails = emailRepository.findByEmail(email)
+        if(emails.isEmpty())
+            emailRepository.save(Email(email, emptyList()))
+        contact.email.add(emails[0])
+        return contact.toDTO()
     }
 }

@@ -9,4 +9,6 @@ interface ContactService {
     fun get(contactId: Int): ContactDTO?
 
     fun create(contactDTO: ContactDTO): ContactDTO
+
+    fun addNewMail(contactId: Int, email: String): ContactDTO
 }
