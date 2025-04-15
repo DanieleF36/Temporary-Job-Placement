@@ -14,4 +14,5 @@ interface ContactService {
     fun addNewEmail(contactId: Int, email: String): ContactDTO
     fun deleteEmail(contactId: Int, emailId: Int)
     fun changeCategory(contactId: Int, category: Category): ContactDTO
+    fun changeAddress(contactId: Int, addressId: Int): ContactDTO
 }

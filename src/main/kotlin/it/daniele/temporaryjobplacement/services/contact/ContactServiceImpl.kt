@@ -159,4 +159,14 @@ class ContactServiceImpl(
         contact.category = category
         return contact.toDTO()
     }
+
+    override fun changeAddress(contactId: Int, addressId: Int): ContactDTO {
+        if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
+        if (addressId <= 0) throw IllegalArgumentException("addressId must be > 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val address = addressRepository.findById(addressId).getOrNull() ?: throw NotFoundException("address not found")
+        if (contact.address.find { it.address ==  address.address} == null)
+            contact.address.add(address)
+        return contact.toDTO()
+    }
 }
