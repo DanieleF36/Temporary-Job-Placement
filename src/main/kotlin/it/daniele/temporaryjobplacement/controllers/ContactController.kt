@@ -2,6 +2,7 @@ package it.daniele.temporaryjobplacement.controllers
 
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.entities.contact.Category
 import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
@@ -39,5 +40,6 @@ class ContactController(private val service: ContactService) {
     fun create(@Valid @RequestBody contactDTO: ContactDTO): ContactDTO = service.create(contactDTO)
 
     @PostMapping("/{contactId}/emails")
-    fun addEmail(@PathVariable contactId: String, @RequestBody @NotBlank email: String): ContactDTO = service.addNewMail(contactId, email)
+    fun addEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @NotBlank email: String): ContactDTO = service.addNewEmail(contactId, email)
+
 }
