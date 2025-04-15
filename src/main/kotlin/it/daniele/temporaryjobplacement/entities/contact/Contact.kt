@@ -19,5 +19,5 @@ class Contact(
     @ManyToMany(mappedBy = "contact")
     val telephone: MutableList<Telephone>,
     val ssn: String?,
-    val category: Category
+    var category: Category
 ): EntityBase()

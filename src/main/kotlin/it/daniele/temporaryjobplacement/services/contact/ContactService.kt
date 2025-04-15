@@ -1,6 +1,7 @@
 package it.daniele.temporaryjobplacement.services.contact
 
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.entities.contact.Category
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Sort
 
@@ -10,7 +11,7 @@ interface ContactService {
 
     fun create(contactDTO: ContactDTO): ContactDTO
 
-    fun addNewMail(contactId: Int, email: String): ContactDTO
     fun addNewEmail(contactId: Int, email: String): ContactDTO
     fun deleteEmail(contactId: Int, emailId: Int)
+    fun changeCategory(contactId: Int, category: Category): ContactDTO
 }

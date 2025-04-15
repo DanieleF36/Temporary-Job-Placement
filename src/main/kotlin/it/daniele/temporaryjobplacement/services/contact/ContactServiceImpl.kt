@@ -2,10 +2,7 @@ package it.daniele.temporaryjobplacement.services.contact
 
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.dtos.toDTO
-import it.daniele.temporaryjobplacement.entities.contact.Address
-import it.daniele.temporaryjobplacement.entities.contact.Contact
-import it.daniele.temporaryjobplacement.entities.contact.Email
-import it.daniele.temporaryjobplacement.entities.contact.Telephone
+import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.AddressRepository
 import it.daniele.temporaryjobplacement.repositories.ContactRepository
@@ -154,5 +151,12 @@ class ContactServiceImpl(
         if(!contactRepo.existsById(contactId)) throw NotFoundException("contact not found")
         if(!emailRepository.existsById(emailId)) throw NotFoundException("email not found")
         emailRepository.deleteById(emailId)
+    }
+
+    override fun changeCategory(contactId: Int, category: Category): ContactDTO {
+        if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        contact.category = category
+        return contact.toDTO()
     }
 }

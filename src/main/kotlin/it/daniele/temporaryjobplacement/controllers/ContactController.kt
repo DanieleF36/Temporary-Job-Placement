@@ -44,4 +44,7 @@ class ContactController(private val service: ContactService) {
 
     @DeleteMapping("/{contactId}/emails/{emailId}")
     fun deleteEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @PathVariable @Min(0, message = "emailId must be >= 0") emailId: Int) = service.deleteEmail(contactId, emailId)
+
+    @PutMapping("/{contactId}/category")
+    fun modifyCategory(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody category: Category): ContactDTO = service.changeCategory(contactId, category)
 }
