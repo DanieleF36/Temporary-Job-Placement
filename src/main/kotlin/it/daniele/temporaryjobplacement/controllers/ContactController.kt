@@ -28,4 +28,9 @@ class ContactController(private val service: ContactService) {
         return service.getAll(page, limit, validateSort(allowed, sort, "email"), name, surname, email, telephone)
     }
 
+    @GetMapping("/{contactId}")
+    fun get(@PathVariable @Positive(message = "Id must be >= 0") contactId: Int): ContactDTO{
+        val contact = service.get(contactId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
+        return contact
+    }
 }

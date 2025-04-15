@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 @Transactional
@@ -72,4 +73,8 @@ class ContactServiceImpl(private val contactRepo: ContactRepository): ContactSer
         return page.map { it.toDTO() }
     }
 
+    override fun get(contactId: Int): ContactDTO? {
+        if (contactId <= 0) throw IllegalArgumentException("id must be > 0")
+        return contactRepo.findById(contactId).getOrNull()?.toDTO()
+    }
 }
