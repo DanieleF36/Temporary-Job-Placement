@@ -147,4 +147,12 @@ class ContactServiceImpl(
         contact.email.add(emails[0])
         return contact.toDTO()
     }
+
+    override fun deleteEmail(contactId: Int, emailId: Int) {
+        if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
+        if (emailId <= 0) throw IllegalArgumentException("emailId must be > 0")
+        if(!contactRepo.existsById(contactId)) throw NotFoundException("contact not found")
+        if(!emailRepository.existsById(emailId)) throw NotFoundException("email not found")
+        emailRepository.deleteById(emailId)
+    }
 }
