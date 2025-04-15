@@ -3,6 +3,7 @@ package it.daniele.temporaryjobplacement.entities.contact
 import it.daniele.temporaryjobplacement.entities.EntityBase
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
 
 @Entity
@@ -11,6 +12,6 @@ class Telephone (
     val prefix: Int,
     @Column
     val number: Int,
-    @OneToMany
+    @ManyToMany
     val contact: List<Contact>
 ): EntityBase()

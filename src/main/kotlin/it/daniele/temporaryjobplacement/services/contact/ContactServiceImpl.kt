@@ -91,30 +91,36 @@ class ContactServiceImpl(
     }
 
     override fun create(contactDTO: ContactDTO): ContactDTO {
-        val emailEntity = contactDTO.email?.let { emailStr ->
+        val emailEntity = mutableListOf<Email>()
+        contactDTO.email.forEach { emailStr ->
             val emails = emailRepository.findByEmail(emailStr)
-            if(emails.size == 0)
+            val email = if(emails.size == 0)
                 emailRepository.save(Email(emailStr, emptyList()))
             else
                 emails[0]
+            emailEntity.add(email)
         }
 
-        val addressEntity = contactDTO.address?.let { addrStr ->
+        val addressEntity = mutableListOf<Address>()
+        contactDTO.address.forEach { addrStr ->
             val adds = addressRepository.findByAddress(addrStr)
-            if(adds.size == 0)
+            val add = if(adds.size == 0)
                 addressRepository.save(Address(addrStr, emptyList()))
             else
                 adds[0]
+            addressEntity.add(add)
         }
 
-        val telephoneEntity = contactDTO.telephone?.let { telStr ->
+        val telephoneEntity = mutableListOf<Telephone>()
+        contactDTO.telephone.forEach { telStr ->
             val prefix = telStr.subSequence(0, 2).toString().toInt()
             val number = telStr.subSequence(2, telStr.length).toString().toInt()
             val tels = telephoneRepository.findByPrefixAndNumber(prefix, number)
-            if(tels.size == 0)
+            val tel = if(tels.size == 0)
                 telephoneRepository.save(Telephone(prefix, number, emptyList()))
             else
                 tels[0]
+            telephoneEntity.add(tel)
         }
 
         val contact = Contact(
