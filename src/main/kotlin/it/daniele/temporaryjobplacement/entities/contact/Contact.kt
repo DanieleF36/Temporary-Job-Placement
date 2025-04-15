@@ -13,11 +13,11 @@ class Contact(
     val name: String,
     val surname: String,
     @ManyToMany(mappedBy = "contact")
-    val email: List<Email>,
+    val email: MutableList<Email>,
     @ManyToMany(mappedBy = "contact")
-    val address: List<Address>,
+    val address: MutableList<Address>,
     @ManyToMany(mappedBy = "contact")
-    val telephone: List<Telephone>,
+    val telephone: MutableList<Telephone>,
     val ssn: String?,
     val category: Category
 ): EntityBase()
