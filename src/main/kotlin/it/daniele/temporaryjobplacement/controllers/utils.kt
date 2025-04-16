@@ -25,6 +25,6 @@ fun validateSort(allowedSort: List<String>, sort: String?, default: String): Sor
             Sort.by(sortField)
         }
     } else {
-        Sort.by("default").descending()
+        Sort.by(default).descending()
     }
 }
