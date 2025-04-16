@@ -13,5 +13,5 @@ class Telephone (
     @Column
     var number: Int,
     @ManyToMany
-    val contact: List<Contact>
+    val contact: MutableList<Contact>
 ): EntityBase()

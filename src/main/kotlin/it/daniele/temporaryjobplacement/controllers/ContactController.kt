@@ -65,4 +65,10 @@ class ContactController(private val service: ContactService) {
         @RequestBody @Valid telephoneDTO: TelephoneDTO,
     ): ContactDTO = service.modifyTelephone(contactId, phoneId, telephoneDTO)
 
+
+    @DeleteMapping("/{contactId}/phone/{phoneId}")
+    fun deleteTelephone(
+        @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int,
+        @PathVariable @Min(0, message = "phone must be >= 0") phoneId: Int
+    ): ContactDTO = service.deleteTelephone(contactId, phoneId)
 }

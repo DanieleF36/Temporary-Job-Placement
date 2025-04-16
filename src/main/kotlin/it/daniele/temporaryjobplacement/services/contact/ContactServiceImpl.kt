@@ -116,7 +116,7 @@ class ContactServiceImpl(
             val number = telStr.subSequence(2, telStr.length).toString().toInt()
             val tels = telephoneRepository.findByPrefixAndNumber(prefix, number)
             val tel = if(tels.size == 0)
-                telephoneRepository.save(Telephone(prefix, number, emptyList()))
+                telephoneRepository.save(Telephone(prefix, number, mutableListOf()))
             else
                 tels[0]
             telephoneEntity.add(tel)
@@ -180,7 +180,7 @@ class ContactServiceImpl(
     override fun addTelephone(contactId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
         if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
-        val tel = Telephone(telephoneDTO.prefix, telephoneDTO.number, emptyList())
+        val tel = Telephone(telephoneDTO.prefix, telephoneDTO.number, mutableListOf())
         telephoneRepository.save(tel)
         contact.telephone.add(tel)
         return contact.toDTO()
@@ -192,6 +192,18 @@ class ContactServiceImpl(
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
         val tel = telephoneRepository.findById(phoneId).getOrNull() ?: throw NotFoundException("telephone not found")
         contact.updatePhone(phoneId, tel)
+        return contact.toDTO()
+    }
+
+    override fun deleteTelephone(contactId: Int, phoneId: Int): ContactDTO {
+        if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
+        if (phoneId < 0) throw IllegalArgumentException("phoneId must be >= 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val tel = telephoneRepository.findById(phoneId).getOrNull() ?: throw NotFoundException("telephone not found")
+        contact.telephone.removeIf { it.getId() == phoneId }
+        tel.contact.removeIf { it.getId() == contactId }
+        if(tel.contact.isEmpty())
+            telephoneRepository.removeById(phoneId)
         return contact.toDTO()
     }
 }
