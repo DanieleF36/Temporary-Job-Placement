@@ -374,4 +374,48 @@ internal class ContactServiceImplTests {
         service.delete(1)
         verify(exactly = 1) { contactRepo.deleteById(1) }
     }
+
+    /** --------------------- addNewEmail ------------------------- **/
+    @Test
+    fun `addNewEmail throws IllegalArgumentException when contactId is negative`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.addNewEmail(-1, "new@example.com") }
+        assertEquals("id must be >= 0", error.message)
+    }
+
+    @Test
+    fun `addNewEmail throws IllegalArgumentException when email is blank`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.addNewEmail(1, "   ") }
+        assertEquals("email must be not blank", error.message)
+    }
+
+    @Test
+    fun `addNewEmail throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.addNewEmail(1, "new@example.com") }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `addNewEmail adds email to contact when email exists in repository`() {
+        val contact = dummyContact()
+        contact.email.clear()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        val existingEmail = Email("new@example.com", mutableListOf())
+        every { emailRepo.findByEmail("new@example.com") } returns mutableListOf(existingEmail)
+
+        val result = service.addNewEmail(1, "new@example.com")
+        assertTrue(result.email.contains("new@example.com"))
+    }
+
+    @Test
+    fun `addNewEmail adds email to contact when email does not exists in repository`() {
+        val contact = dummyContact()
+        contact.email.clear()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        val existingEmail = Email("new@example.com", mutableListOf())
+        every { emailRepo.findByEmail("new@example.com") } returns mutableListOf()
+        every { emailRepo.save(existingEmail) } returns existingEmail
+        val result = service.addNewEmail(1, "new@example.com")
+        assertTrue(result.email.contains("new@example.com"))
+    }
 }
