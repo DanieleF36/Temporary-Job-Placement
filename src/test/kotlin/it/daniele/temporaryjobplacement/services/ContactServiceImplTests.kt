@@ -3,6 +3,7 @@ package it.daniele.temporaryjobplacement.services
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.repositories.AddressRepository
 import it.daniele.temporaryjobplacement.repositories.ContactRepository
@@ -259,7 +260,8 @@ internal class ContactServiceImplTests {
     /** --------------------- get ------------------------- **/
     @Test
     fun `get throws IllegalArgumentException for negative id`() {
-        assertThrows(IllegalArgumentException::class.java) { service.get(-1) }
+        val error = assertThrows(IllegalArgumentException::class.java) { service.get(-1) }
+        assertEquals("id must be >= 0", error.message)
     }
 
     @Test
@@ -277,4 +279,74 @@ internal class ContactServiceImplTests {
         assertNotNull(result)
         assertEquals(contact.name, result!!.name)
     }
+
+    /** --------------------- create ------------------------- **/
+    @Test
+    fun `create creates contact with new email, address, and telephone when entities do not exist`() {
+        val contactDTO = ContactDTO(
+            name = "Alice",
+            surname = "Smith",
+            email = listOf("alice@example.com"),
+            address = listOf("123 Main St"),
+            telephone = listOf("3912345678"),
+            ssn = "111-22-3333",
+            category = Category.CUSTOMER
+        )
+
+        every { emailRepo.findByEmail("alice@example.com") } returns mutableListOf()
+        every { emailRepo.save(any<Email>()) } answers { firstArg<Email>() }
+
+        every { addressRepo.findByAddress("123 Main St") } returns mutableListOf()
+        every { addressRepo.save(any<Address>()) } answers { firstArg<Address>() }
+
+        every { telephoneRepo.findByPrefixAndNumber(39, 12345678) } returns mutableListOf()
+        every { telephoneRepo.save(any<Telephone>()) } answers { firstArg<Telephone>() }
+
+        every { contactRepo.save(any<Contact>()) } answers { firstArg<Contact>() }
+
+        val result = service.create(contactDTO)
+        assertEquals("Alice", result.name)
+        assertEquals("Smith", result.surname)
+        assertEquals("111-22-3333", result.ssn)
+        assertEquals(Category.CUSTOMER, result.category)
+        assertEquals(1, result.email.size)
+        assertEquals("alice@example.com", result.email[0])
+        assertEquals(1, result.address.size)
+        assertEquals("123 Main St", result.address[0])
+        assertEquals(1, result.telephone.size)
+    }
+
+    @Test
+    fun `create reuses existing email, address, and telephone when available`() {
+        val contactDTO = ContactDTO(
+            name = "Bob",
+            surname = "Johnson",
+            email = listOf("bob@example.com"),
+            address = listOf("456 Elm St"),
+            telephone = listOf("4012345678"),
+            ssn = "222-33-4444",
+            category = Category.CUSTOMER
+        )
+
+        val existingEmail = Email("bob@example.com", mutableListOf())
+        val existingAddress = Address("456 Elm St", emptyList())
+        val existingTelephone = Telephone(40, 12345678, mutableListOf())
+
+        every { emailRepo.findByEmail("bob@example.com") } returns mutableListOf(existingEmail)
+        every { addressRepo.findByAddress("456 Elm St") } returns mutableListOf(existingAddress)
+        every { telephoneRepo.findByPrefixAndNumber(40, 12345678) } returns mutableListOf(existingTelephone)
+        every { contactRepo.save(any<Contact>()) } answers { firstArg<Contact>() }
+
+        val result = service.create(contactDTO)
+        assertEquals("Bob", result.name)
+        assertEquals("Johnson", result.surname)
+        assertEquals("222-33-4444", result.ssn)
+        assertEquals(Category.CUSTOMER, result.category)
+        assertEquals(1, result.email.size)
+        assertEquals("bob@example.com", result.email[0])
+        assertEquals(1, result.address.size)
+        assertEquals("456 Elm St", result.address[0])
+        assertEquals(1, result.telephone.size)
+    }
+
 }
