@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.entities.EntityBase
 import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.AddressRepository
@@ -417,5 +418,79 @@ internal class ContactServiceImplTests {
         every { emailRepo.save(existingEmail) } returns existingEmail
         val result = service.addNewEmail(1, "new@example.com")
         assertTrue(result.email.contains("new@example.com"))
+    }
+
+    /** --------------------- deleteEmail ------------------------- **/
+    @Test
+    fun `deleteEmail throws IllegalArgumentException when contactId is negative`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.deleteEmail(0, 1) }
+        assertEquals("contactId must be > 0", error.message)
+    }
+
+    @Test
+    fun `deleteEmail throws IllegalArgumentException when emailId is negative`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.deleteEmail(1, 0) }
+        assertEquals("emailId must be > 0", error.message)
+    }
+
+    @Test
+    fun `deleteEmail throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.deleteEmail(1, 1) }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `deleteEmail throws NotFoundException when email not found`() {
+        val contact = dummyContact()
+        contact.email.add(Email("test@example.com", mutableListOf()))
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { emailRepo.findById(1) } returns Optional.empty()
+
+        val error = assertThrows(NotFoundException::class.java) { service.deleteEmail(1, 1) }
+        assertEquals("email not found", error.message)
+    }
+
+    @Test
+    fun `deleteEmail removes email from contact and deletes email when no contacts remain`() {
+        val email = Email("test@example.com", mutableListOf())
+        val contact = dummyContact()
+        EntityBase::class.java
+            .getDeclaredField("id")
+            .apply {
+                isAccessible = true
+                set(contact, 1)
+            }
+        email.contact.add(contact)
+        contact.email.add(email)
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { emailRepo.findById(1) } returns Optional.of(email)
+        every { emailRepo.deleteById(1) } returns Unit
+
+        service.deleteEmail(1, 1)
+        assertFalse(contact.email.contains(email))
+        assertTrue(contact.email.isEmpty())
+        verify(exactly = 1) { emailRepo.deleteById(1) }
+    }
+
+    @Test
+    fun `deleteEmail removes email from contact without deleting email when contacts remain`() {
+        val email = Email("test@example.com", mutableListOf())
+        email.contact.add(dummyContact())
+        email.contact.add(dummyContact())
+        val contact = dummyContact()
+        EntityBase::class.java
+            .getDeclaredField("id")
+            .apply {
+                isAccessible = true
+                set(contact, 1)
+            }
+        contact.email.add(email)
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { emailRepo.findById(1) } returns Optional.of(email)
+
+        service.deleteEmail(1, 1)
+        assertFalse(contact.email.contains(email))
+        verify(exactly = 0) { emailRepo.deleteById(1) }
     }
 }
