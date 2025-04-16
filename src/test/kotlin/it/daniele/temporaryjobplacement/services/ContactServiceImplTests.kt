@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.*
+import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.AddressRepository
 import it.daniele.temporaryjobplacement.repositories.ContactRepository
 import it.daniele.temporaryjobplacement.repositories.EmailRepository
@@ -349,4 +350,28 @@ internal class ContactServiceImplTests {
         assertEquals(1, result.telephone.size)
     }
 
+
+    /** --------------------- delete ------------------------- **/
+    @Test
+    fun `delete throws IllegalArgumentException when contactId is non-positive`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.delete(0) }
+        assertEquals("contactId must be > 0", error.message)
+    }
+
+    @Test
+    fun `delete throws NotFoundException when contact not found`() {
+        every { contactRepo.existsById(1) } returns false
+        val error = assertThrows(NotFoundException::class.java) { service.delete(1) }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `delete calls deleteById when contact exists`() {
+        every { contactRepo.existsById(1) } returns true
+        every { contactRepo.findById(1) } returns Optional.of(dummyContact())
+        every { contactRepo.deleteById(1) } returns Unit
+
+        service.delete(1)
+        verify(exactly = 1) { contactRepo.deleteById(1) }
+    }
 }
