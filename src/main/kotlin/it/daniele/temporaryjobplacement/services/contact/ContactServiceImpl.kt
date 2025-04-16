@@ -147,7 +147,7 @@ class ContactServiceImpl(
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
         val emails = emailRepository.findByEmail(email)
         if(emails.isEmpty())
-            emailRepository.save(Email(email, mutableListOf()))
+            emails.add(emailRepository.save(Email(email, mutableListOf())))
         contact.email.add(emails[0])
         return contact.toDTO()
     }
