@@ -493,4 +493,27 @@ internal class ContactServiceImplTests {
         assertFalse(contact.email.contains(email))
         verify(exactly = 0) { emailRepo.deleteById(1) }
     }
+
+    /** --------------------- changeCategory ------------------------- **/
+    @Test
+    fun `changeCategory throws IllegalArgumentException for non-positive contactId`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.changeCategory(0, Category.CUSTOMER) }
+        assertEquals("contactId must be > 0", error.message)
+    }
+
+    @Test
+    fun `changeCategory throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.changeCategory(1, Category.CUSTOMER) }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `changeCategory updates category and returns updated DTO`() {
+        val contact = dummyContact(category = Category.CUSTOMER)
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+
+        val result = service.changeCategory(1, Category.CUSTOMER)
+        assertEquals(Category.CUSTOMER, result.category)
+    }
 }
