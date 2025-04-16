@@ -56,7 +56,7 @@ class ContactController(private val service: ContactService) {
     fun modifyAddress(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @PathVariable @Min(0, message = "addressId must be >= 0") addressId: Int): ContactDTO = service.changeAddress(contactId, addressId)
 
     @PostMapping("/{contactId}/phone")
-    fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: String, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
+    fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
 
 
 }
