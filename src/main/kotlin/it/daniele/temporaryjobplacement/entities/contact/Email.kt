@@ -11,5 +11,5 @@ class Email(
     @Column(unique = true, nullable = false)
     val email: String,
     @ManyToMany
-    val contact: List<Contact>
+    val contact: MutableList<Contact>
 ): EntityBase()

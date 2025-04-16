@@ -94,7 +94,7 @@ class ContactServiceImpl(
         contactDTO.email.forEach { emailStr ->
             val emails = emailRepository.findByEmail(emailStr)
             val email = if(emails.size == 0)
-                emailRepository.save(Email(emailStr, emptyList()))
+                emailRepository.save(Email(emailStr, mutableListOf()))
             else
                 emails[0]
             emailEntity.add(email)
@@ -147,7 +147,7 @@ class ContactServiceImpl(
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
         val emails = emailRepository.findByEmail(email)
         if(emails.isEmpty())
-            emailRepository.save(Email(email, emptyList()))
+            emailRepository.save(Email(email, mutableListOf()))
         contact.email.add(emails[0])
         return contact.toDTO()
     }
@@ -155,9 +155,12 @@ class ContactServiceImpl(
     override fun deleteEmail(contactId: Int, emailId: Int) {
         if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
         if (emailId <= 0) throw IllegalArgumentException("emailId must be > 0")
-        if(!contactRepo.existsById(contactId)) throw NotFoundException("contact not found")
-        if(!emailRepository.existsById(emailId)) throw NotFoundException("email not found")
-        emailRepository.deleteById(emailId)
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val email = emailRepository.findById(emailId).getOrNull() ?: throw NotFoundException("email not found")
+        contact.email.remove(email)
+        email.contact.removeIf { it.getId() == contactId }
+        if(email.contact.isEmpty())
+            emailRepository.deleteById(emailId)
     }
 
     override fun changeCategory(contactId: Int, category: Category): ContactDTO {
