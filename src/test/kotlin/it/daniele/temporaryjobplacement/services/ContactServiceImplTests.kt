@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import java.util.*
 
 internal class ContactServiceImplTests {
     private val contactRepo: ContactRepository = mockk()
@@ -253,5 +254,27 @@ internal class ContactServiceImplTests {
                 "John", "Doe", "1234567890", "test@example.com", pageable
             )
         }
+    }
+
+    /** --------------------- get ------------------------- **/
+    @Test
+    fun `get throws IllegalArgumentException for negative id`() {
+        assertThrows(IllegalArgumentException::class.java) { service.get(-1) }
+    }
+
+    @Test
+    fun `get returns null when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val result = service.get(1)
+        assertNull(result)
+    }
+
+    @Test
+    fun `get returns contact DTO when found`() {
+        val contact = dummyContact()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        val result = service.get(1)
+        assertNotNull(result)
+        assertEquals(contact.name, result!!.name)
     }
 }
