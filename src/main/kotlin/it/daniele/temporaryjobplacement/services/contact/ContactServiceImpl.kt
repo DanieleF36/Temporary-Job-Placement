@@ -1,6 +1,7 @@
 package it.daniele.temporaryjobplacement.services.contact
 
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
 import it.daniele.temporaryjobplacement.dtos.toDTO
 import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
@@ -173,6 +174,15 @@ class ContactServiceImpl(
         val address = addressRepository.findById(addressId).getOrNull() ?: throw NotFoundException("address not found")
         if (contact.address.find { it.address ==  address.address} == null)
             contact.address.add(address)
+        return contact.toDTO()
+    }
+
+    override fun addTelephone(contactId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
+        if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val tel = Telephone(telephoneDTO.prefix, telephoneDTO.number, emptyList())
+        telephoneRepository.save(tel)
+        contact.telephone.add(tel)
         return contact.toDTO()
     }
 }

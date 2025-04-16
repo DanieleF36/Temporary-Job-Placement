@@ -2,6 +2,7 @@ package it.daniele.temporaryjobplacement.controllers
 
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid
@@ -53,4 +54,9 @@ class ContactController(private val service: ContactService) {
 
     @PutMapping("/{contactId}/address/{addressId}")
     fun modifyAddress(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @PathVariable @Min(0, message = "addressId must be >= 0") addressId: Int): ContactDTO = service.changeAddress(contactId, addressId)
+
+    @PostMapping("/{contactId}/phone")
+    fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: String, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
+
+
 }
