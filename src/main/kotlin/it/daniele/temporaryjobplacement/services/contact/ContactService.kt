@@ -17,4 +17,5 @@ interface ContactService {
     fun changeCategory(contactId: Int, category: Category): ContactDTO
     fun changeAddress(contactId: Int, addressId: Int): ContactDTO
     fun addTelephone(contactId: Int, telephoneDTO: TelephoneDTO): ContactDTO
+    fun modifyTelephone(contactId: Int, phoneId: Int, telephoneDTO: TelephoneDTO): ContactDTO
 }

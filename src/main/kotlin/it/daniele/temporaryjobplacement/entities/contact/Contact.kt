@@ -20,4 +20,9 @@ class Contact(
     val telephone: MutableList<Telephone>,
     val ssn: String?,
     var category: Category
-): EntityBase()
+): EntityBase(){
+    fun updatePhone(phoneId: Int, tel: Telephone){
+        telephone.removeIf { it.getId() == phoneId }
+        telephone.add(tel)
+    }
+}

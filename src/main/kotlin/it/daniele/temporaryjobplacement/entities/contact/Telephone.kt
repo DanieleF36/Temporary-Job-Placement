@@ -9,9 +9,9 @@ import jakarta.persistence.OneToMany
 @Entity
 class Telephone (
     @Column
-    val prefix: Int,
+    var prefix: Int,
     @Column
-    val number: Int,
+    var number: Int,
     @ManyToMany
     val contact: List<Contact>
 ): EntityBase()

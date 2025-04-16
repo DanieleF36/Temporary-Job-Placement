@@ -185,4 +185,13 @@ class ContactServiceImpl(
         contact.telephone.add(tel)
         return contact.toDTO()
     }
+
+    override fun modifyTelephone(contactId: Int, phoneId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
+        if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
+        if (phoneId < 0) throw IllegalArgumentException("phoneId must be >= 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val tel = telephoneRepository.findById(phoneId).getOrNull() ?: throw NotFoundException("telephone not found")
+        contact.updatePhone(phoneId, tel)
+        return contact.toDTO()
+    }
 }
