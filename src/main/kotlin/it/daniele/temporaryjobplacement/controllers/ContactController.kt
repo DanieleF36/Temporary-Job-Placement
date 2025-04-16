@@ -31,7 +31,7 @@ class ContactController(private val service: ContactService) {
     }
 
     @GetMapping("/{contactId}")
-    fun get(@PathVariable @Positive(message = "Id must be >= 0") contactId: Int): ContactDTO{
+    fun get(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int): ContactDTO{
         val contact = service.get(contactId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
         return contact
     }
