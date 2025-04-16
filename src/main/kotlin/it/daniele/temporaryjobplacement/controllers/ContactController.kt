@@ -39,6 +39,9 @@ class ContactController(private val service: ContactService) {
     @PostMapping
     fun create(@Valid @RequestBody contactDTO: ContactDTO): ContactDTO = service.create(contactDTO)
 
+    @DeleteMapping("/{contactId}")
+    fun delete(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int) = service.delete(contactId)
+
     @PostMapping("/{contactId}/emails")
     fun addEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @NotBlank email: String): ContactDTO = service.addNewEmail(contactId, email)
 
