@@ -8,7 +8,6 @@ import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
@@ -53,7 +52,11 @@ class ContactController(private val service: ContactService) {
     fun modifyCategory(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody category: Category): ContactDTO = service.changeCategory(contactId, category)
 
     @PutMapping("/{contactId}/address/{addressId}")
-    fun modifyAddress(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @PathVariable @Min(0, message = "addressId must be >= 0") addressId: Int): ContactDTO = service.changeAddress(contactId, addressId)
+    fun modifyAddress(
+        @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int,
+        @PathVariable @Min(0, message = "addressId must be >= 0") addressId: Int,
+        @RequestBody @NotBlank address: String
+    ): ContactDTO = service.changeAddress(contactId, addressId, address)
 
     @PostMapping("/{contactId}/phone")
     fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
@@ -63,7 +66,7 @@ class ContactController(private val service: ContactService) {
         @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int,
         @PathVariable @Min(0, message = "phone must be >= 0") phoneId: Int,
         @RequestBody @Valid telephoneDTO: TelephoneDTO,
-    ): ContactDTO = service.modifyTelephone(contactId, phoneId, telephoneDTO)
+    ): ContactDTO = service.changeTelephone(contactId, phoneId, telephoneDTO)
 
 
     @DeleteMapping("/{contactId}/phone/{phoneId}")

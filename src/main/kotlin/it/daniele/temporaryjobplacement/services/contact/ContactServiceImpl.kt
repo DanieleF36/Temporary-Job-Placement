@@ -104,7 +104,7 @@ class ContactServiceImpl(
         contactDTO.address.forEach { addrStr ->
             val adds = addressRepository.findByAddress(addrStr)
             val add = if(adds.size == 0)
-                addressRepository.save(Address(addrStr, emptyList()))
+                addressRepository.save(Address(addrStr, mutableListOf()))
             else
                 adds[0]
             addressEntity.add(add)
@@ -170,13 +170,19 @@ class ContactServiceImpl(
         return contact.toDTO()
     }
 
-    override fun changeAddress(contactId: Int, addressId: Int): ContactDTO {
+    override fun changeAddress(contactId: Int, addressId: Int, address: String): ContactDTO {
         if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
         if (addressId <= 0) throw IllegalArgumentException("addressId must be > 0")
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
-        val address = addressRepository.findById(addressId).getOrNull() ?: throw NotFoundException("address not found")
-        if (contact.address.find { it.address ==  address.address} == null)
-            contact.address.add(address)
+        val add = addressRepository.findById(addressId).getOrNull() ?: throw NotFoundException("address not found")
+        if (add.contact.size == 1)
+            add.address = address
+        else{
+            contact.address.removeIf { it.getId() == contactId }
+            add.contact.removeIf { it.getId() == addressId }
+            val newAdd = addressRepository.save(Address(add.address, mutableListOf(contact)))
+            contact.address.add(newAdd)
+        }
         return contact.toDTO()
     }
 

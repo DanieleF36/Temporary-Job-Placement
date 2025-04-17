@@ -12,5 +12,5 @@ class Address(
     @Column(unique = true, nullable = false)
     var address: String,
     @ManyToMany
-    val contact: List<Contact>
+    val contact: MutableList<Contact>
 ): EntityBase()
