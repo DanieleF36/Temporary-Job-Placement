@@ -5,18 +5,24 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 
 @Entity
 class Contact(
-    val name: String,
-    val surname: String,
-    @ManyToOne
-    val email: Email?,
-    @ManyToOne
-    val address: Address?,
-    @ManyToOne
-    val telephone: Telephone?,
-    val ssn: String?,
-    val category: Category
-): EntityBase()
+    var name: String,
+    var surname: String,
+    @ManyToMany(mappedBy = "contact")
+    val email: MutableList<Email>,
+    @ManyToMany(mappedBy = "contact")
+    val address: MutableList<Address>,
+    @ManyToMany(mappedBy = "contact")
+    val telephone: MutableList<Telephone>,
+    var ssn: String?,
+    var category: Category
+): EntityBase(){
+    fun updatePhone(phoneId: Int, tel: Telephone){
+        telephone.removeIf { it.getId() == phoneId }
+        telephone.add(tel)
+    }
+}

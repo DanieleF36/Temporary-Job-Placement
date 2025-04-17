@@ -7,15 +7,15 @@ import jakarta.validation.constraints.NotBlank
 
 
 data class ContactDTO(
-    val id: Int,
+    val id: Int=0,
     @field:NotBlank val name: String,
     @field:NotBlank val surname: String,
-    @field:OptionalNotBlank val email: String?,
-    @field:OptionalNotBlank val address: String?,
-    @field:OptionalNotBlank val telephone: String?,
+    val email: List<@NotBlank String>,
+    val address: List<@NotBlank  String>,
+    val telephone: List<@NotBlank String>,
     @field:OptionalNotBlank val ssn: String?,
     val category: Category
 )
 
 fun Contact.toDTO(): ContactDTO =
-    ContactDTO(this.getId(), name, surname, email?.email, address?.address, "${telephone?.prefix}${telephone?.number}", ssn, category)
+    ContactDTO(this.getId(), name, surname, email.map { it.email }, address.map { it.address }, telephone .map { "${it.prefix}${it.number}" }, ssn, category)

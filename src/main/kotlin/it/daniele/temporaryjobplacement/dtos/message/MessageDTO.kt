@@ -1,4 +1,4 @@
-package it.daniele.temporaryjobplacement.dtos.message
+package it.daniele.temporaryjobplacement.dtos
 
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.entities.message.Channel
