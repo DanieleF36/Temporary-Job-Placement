@@ -1,11 +1,9 @@
 package it.daniele.temporaryjobplacement.controllers
 
-import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.ActionDTO
+import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.dtos.message.ChangeStateDTO
 import it.daniele.temporaryjobplacement.dtos.message.CreateMessageDTO
-import it.daniele.temporaryjobplacement.dtos.message.MessageDTO
-import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
 import it.daniele.temporaryjobplacement.services.MessageService
 import jakarta.validation.Valid
@@ -15,7 +13,6 @@ import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
-import java.time.ZonedDateTime
 
 
 @RestController

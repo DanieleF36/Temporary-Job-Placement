@@ -1,8 +1,7 @@
 package it.daniele.temporaryjobplacement.services
 
 import it.daniele.temporaryjobplacement.dtos.ActionDTO
-import it.daniele.temporaryjobplacement.dtos.message.MessageDTO
-import it.daniele.temporaryjobplacement.dtos.message.toDTO
+import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.dtos.toDTO
 import it.daniele.temporaryjobplacement.entities.message.Action
 import it.daniele.temporaryjobplacement.entities.message.Channel
