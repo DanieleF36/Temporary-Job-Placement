@@ -3,7 +3,7 @@ package it.daniele.temporaryjobplacement.integration
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import it.daniele.temporaryjobplacement.dtos.ActionDTO
-import it.daniele.temporaryjobplacement.dtos.message.MessageDTO
+import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MessageControllerIntegrationTest : IntegrationTest() {
+class MessageIntegrationTest : IntegrationTest() {
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate

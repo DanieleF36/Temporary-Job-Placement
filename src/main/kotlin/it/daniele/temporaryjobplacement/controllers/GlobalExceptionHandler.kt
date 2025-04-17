@@ -4,10 +4,12 @@ import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.exceptions.DocumentNameAlreadyExists
 import it.daniele.temporaryjobplacement.exceptions.WrongNewStateException
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.ConstraintViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
 
 data class ErrorResponse(
@@ -67,5 +69,29 @@ class GlobalExceptionHandler {
             message = e.message ?: "newState is not a valid"
         )
         return ResponseEntity(error, HttpStatus.UNPROCESSABLE_ENTITY)
+    }
+
+    @ExceptionHandler(ConstraintViolationException::class)
+    fun onConstraintViolation(ex: ConstraintViolationException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(
+            timestamp = LocalDateTime.now(),
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            path = request.requestURL.toString(),
+            message = ex.message?.substringAfter(": ")
+        )
+        return ResponseEntity(error, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(ResponseStatusException::class)
+    fun onResponseStatusException(ex: ResponseStatusException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val error = ErrorResponse(
+            timestamp = LocalDateTime.now(),
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            path = request.requestURL.toString(),
+            message = ex.reason
+        )
+        return ResponseEntity(error, HttpStatus.BAD_REQUEST)
     }
 }

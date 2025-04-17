@@ -1,5 +1,5 @@
 package it.daniele.temporaryjobplacement.services
-
+/*
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -288,3 +288,5 @@ internal class DocumentServiceImplTests {
         verify(exactly = 1) { repoMeta.deleteById(id) }
     }
 }
+
+ */

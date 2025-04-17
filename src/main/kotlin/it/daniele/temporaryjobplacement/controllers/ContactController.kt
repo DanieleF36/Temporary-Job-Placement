@@ -9,18 +9,21 @@ import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/API/contacts")
+@Validated
 class ContactController(private val service: ContactService) {
     @GetMapping
     fun getAll(
         @RequestParam(defaultValue = "0") @Min(0, message = "Page number must be >= 0") page: Int,
-        @RequestParam(defaultValue = "10") @Min(0, message = "Limit number must be > 0")limit: Int,
+        @RequestParam(defaultValue = "10") @Positive(message = "Limit number must be > 0")limit: Int,
         @RequestParam sort: String?,
         @RequestParam(required = false) @OptionalNotBlank name: String?,
         @RequestParam(required = false) @OptionalNotBlank surname: String?,
