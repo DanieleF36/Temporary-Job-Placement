@@ -124,4 +124,36 @@ class ContactIntegration: IntegrationTest() {
         assertEquals("VRDLGU80B02H502U", c2.ssn)
         assertEquals(Category.PROFESSIONAL, c2.category)
     }
+
+    /** ------------------- get ------------------------ **/
+    @Test
+    fun `get throws BAD_REQUEST when id is negative`() {
+        val response = restTemplate.getForEntity("/API/contacts/-1", String::class.java)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `get throws NOT_FOUND when id does not exist`() {
+        val response = restTemplate.getForEntity("/API/contacts/9999", String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("id not found", json["message"].asText())
+    }
+
+    @Test
+    fun `get returns OK when id exists`() {
+        val response = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        assertEquals(HttpStatus.OK, response.statusCode)
+        val contact: ContactDTO = mapper.readValue(response.body!!)
+        assertEquals(1, contact.id)
+        assertEquals("Mario", contact.name)
+        assertEquals("Rossi", contact.surname)
+        assertEquals(listOf("example1@example.com"), contact.email)
+        assertEquals(listOf("Via Roma 1, Rome"), contact.address)
+        assertEquals(listOf("39123456789"), contact.telephone)
+        assertEquals("RSSMRA80A01H501U", contact.ssn)
+        assertEquals(Category.CUSTOMER, contact.category)
+    }
 }
