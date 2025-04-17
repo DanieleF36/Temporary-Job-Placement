@@ -283,6 +283,36 @@ internal class ContactServiceImplTests {
         assertEquals(contact.name, result!!.name)
     }
 
+    /** --------------------- update ------------------------- **/
+    @Test
+    fun `update throws IllegalArgumentException for negative id`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.update(-1, "A", "B", "C")
+        }
+        assertEquals("id must be >= 0", error.message)
+    }
+
+    @Test
+    fun `update throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) {
+            service.update(1, "A", "B", "C")
+        }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `update changes name, surname and ssn of existing contact`() {
+        val contact = dummyContact(name = "Old", surname = "Name", ssn = "000")
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+
+        val result = service.update(1, "NewName", "NewSurname", "999")
+
+        assertEquals("NewName", result.name)
+        assertEquals("NewSurname", result.surname)
+        assertEquals("999", result.ssn)
+    }
+
     /** --------------------- create ------------------------- **/
     @Test
     fun `create creates contact with new email, address, and telephone when entities do not exist`() {
@@ -421,6 +451,101 @@ internal class ContactServiceImplTests {
         assertTrue(result.email.contains("new@example.com"))
     }
 
+    /** --------------------- changeEmail ------------------------- **/
+    @Test
+    fun `changeEmail throws IllegalArgumentException for non-positive contactId`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.changeEmail(0, 1, "new@example.com")
+        }
+        assertEquals("contactId must be > 0", error.message)
+    }
+
+    @Test
+    fun `changeEmail throws IllegalArgumentException for non-positive emailId`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.changeEmail(1, 0, "new@example.com")
+        }
+        assertEquals("emailId must be > 0", error.message)
+    }
+
+    @Test
+    fun `changeEmail throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) {
+            service.changeEmail(1, 1, "new@example.com")
+        }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `changeEmail throws NotFoundException when email not found`() {
+        val contact = dummyContact()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { emailRepo.findById(1) } returns Optional.empty()
+
+        val error = assertThrows(NotFoundException::class.java) {
+            service.changeEmail(1, 1, "new@example.com")
+        }
+        assertEquals("email not found", error.message)
+    }
+
+    @Test
+    fun `changeEmail updates email when singly associated`() {
+        val contact = dummyContact()
+        contact.email.clear()
+        val email = Email("old@example.com", mutableListOf(contact))
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true
+            set(contact, 1)
+        }
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true
+            set(email, 1)
+        }
+        contact.email.add(email)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { emailRepo.findById(1) } returns Optional.of(email)
+
+        val result = service.changeEmail(1, 1, "new@example.com")
+
+        assertTrue(result.email.contains("new@example.com"))
+        assertFalse(result.email.contains("old@example.com"))
+    }
+
+    @Test
+    fun `changeEmail creates new email when shared by multiple contacts`() {
+        val contact1 = dummyContact()
+        val contact2 = dummyContact(name = "Other")
+                EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true
+            set(contact1, 1)
+        }
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true
+            set(contact2, 2)
+        }
+        val shared = Email("shared@example.com", mutableListOf(contact1, contact2))
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true
+            set(shared, 1)
+        }
+        contact1.email.add(shared)
+        contact2.email.add(shared)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact1)
+        every { emailRepo.findById(1) } returns Optional.of(shared)
+        every { emailRepo.save(any<Email>()) } answers { firstArg<Email>() }
+
+        val result = service.changeEmail(1, 1, "new@example.com")
+
+        // original shared remains for contact2
+        assertTrue(contact2.email.any { it.email == "shared@example.com" })
+        // contact1 now has only the new email
+        assertTrue(result.email.contains("new@example.com"))
+        verify(exactly = 1) { emailRepo.save(any()) }
+    }
+
     /** --------------------- deleteEmail ------------------------- **/
     @Test
     fun `deleteEmail throws IllegalArgumentException when contactId is negative`() {
@@ -518,6 +643,59 @@ internal class ContactServiceImplTests {
         assertEquals(Category.CUSTOMER, result.category)
     }
 
+    /** --------------------- addAddress ------------------------- **/
+    @Test
+    fun `addAddress throws IllegalArgumentException when contactId is negative`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.addAddress(-1, "123 Main St")
+        }
+        assertEquals("id must be >= 0", error.message)
+    }
+
+    @Test
+    fun `addAddress throws IllegalArgumentException when address is blank`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.addAddress(1, "   ")
+        }
+        assertEquals("address must be not blank", error.message)
+    }
+
+    @Test
+    fun `addAddress throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) {
+            service.addAddress(1, "123 Main St")
+        }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `addAddress creates new address when not present`() {
+        val contact = dummyContact()
+        contact.address.clear()
+
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { addressRepo.findByAddress("123 Main St") } returns mutableListOf()
+        every { addressRepo.save(any<Address>()) } answers { firstArg<Address>() }
+
+        val result = service.addAddress(1, "123 Main St")
+        assertTrue(result.address.contains("123 Main St"))
+    }
+
+    @Test
+    fun `addAddress reuses existing address when available`() {
+        val contact = dummyContact()
+        val existing = Address("456 Elm St", mutableListOf(contact))
+
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { addressRepo.findByAddress("456 Elm St") } returns mutableListOf(existing)
+
+        val result = service.addAddress(1, "456 Elm St")
+        assertTrue(result.address.contains("456 Elm St"))
+        verify(exactly = 0) { addressRepo.save(any()) }
+    }
+
+
     /** --------------------- changeAddress ------------------------- **/
     @Test
     fun `changeAddress throws IllegalArgumentException for non-positive contactId`() {
@@ -583,6 +761,90 @@ internal class ContactServiceImplTests {
         verify(exactly = 1) { addressRepo.save(saved) }
         assertTrue(dto.address.any { it == "788 Oak St" })
         assertTrue(contact2.address.any { it.address == "789 Oak St" })
+    }
+
+    /** --------------------- deleteAddress ------------------------- **/
+    @Test
+    fun `deleteAddress throws IllegalArgumentException when contactId is non-positive`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.deleteAddress(0, 1)
+        }
+        assertEquals("contactId must be > 0", error.message)
+    }
+
+    @Test
+    fun `deleteAddress throws IllegalArgumentException when addressId is non-positive`() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            service.deleteAddress(1, 0)
+        }
+        assertEquals("addressId must be > 0", error.message)
+    }
+
+    @Test
+    fun `deleteAddress throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) {
+            service.deleteAddress(1, 1)
+        }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `deleteAddress throws NotFoundException when address not found`() {
+        val contact = dummyContact()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { addressRepo.findById(2) } returns Optional.empty()
+
+        val error = assertThrows(NotFoundException::class.java) {
+            service.deleteAddress(1, 2)
+        }
+        assertEquals("address not found", error.message)
+    }
+
+    @Test
+    fun `deleteAddress removes address and deletes when no contacts remain`() {
+        val contact = dummyContact()
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true; set(contact, 1)
+        }
+        val addr = Address("789 Oak St", mutableListOf(contact))
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true; set(addr, 2)
+        }
+        contact.address.add(addr)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { addressRepo.findById(2) } returns Optional.of(addr)
+        every { addressRepo.deleteById(2) } returns Unit
+
+        service.deleteAddress(1, 2)
+        assertFalse(contact.address.contains(addr))
+        verify(exactly = 1) { addressRepo.deleteById(2) }
+    }
+
+    @Test
+    fun `deleteAddress removes address without deleting when contacts remain`() {
+        val contact1 = dummyContact()
+        val contact2 = dummyContact(name = "Dan")
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true; set(contact1, 1)
+        }
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true; set(contact2, 2)
+        }
+        val shared = Address("789 Oak St", mutableListOf(contact1, contact2))
+        EntityBase::class.java.getDeclaredField("id").apply {
+            isAccessible = true; set(shared, 2)
+        }
+        contact1.address.add(shared)
+        contact2.address.add(shared)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact1)
+        every { addressRepo.findById(2) } returns Optional.of(shared)
+
+        service.deleteAddress(1, 2)
+        assertFalse(contact1.address.contains(shared))
+        verify(exactly = 0) { addressRepo.deleteById(2) }
     }
 
     /** --------------------- addTelephone ------------------------- **/
