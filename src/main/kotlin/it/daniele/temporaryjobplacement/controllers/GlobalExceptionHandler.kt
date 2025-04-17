@@ -87,11 +87,11 @@ class GlobalExceptionHandler {
     fun onResponseStatusException(ex: ResponseStatusException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
         val error = ErrorResponse(
             timestamp = LocalDateTime.now(),
-            status = HttpStatus.BAD_REQUEST.value(),
-            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            status = ex.statusCode.value(),
+            error = ex.statusCode.toString(),
             path = request.requestURL.toString(),
             message = ex.reason
         )
-        return ResponseEntity(error, HttpStatus.BAD_REQUEST)
+        return ResponseEntity(error, ex.statusCode)
     }
 }
