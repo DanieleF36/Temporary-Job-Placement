@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
 import it.daniele.temporaryjobplacement.entities.EntityBase
 import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
@@ -610,5 +611,79 @@ internal class ContactServiceImplTests {
 
         val result = service.addTelephone(1, telDTO)
         assertTrue(result.telephone.isNotEmpty())
+    }
+
+    /** --------------------- changeTelephone ------------------------- **/
+    @Test
+    fun `changeTelephone throws IllegalArgumentException when contactId is negative`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 87654321)
+        val error = assertThrows(IllegalArgumentException::class.java) { service.changeTelephone(-1, 1, telDTO) }
+        assertEquals("id must be >= 0", error.message)
+    }
+
+    @Test
+    fun `changeTelephone throws IllegalArgumentException when phoneId is negative`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 87654321)
+        val error = assertThrows(IllegalArgumentException::class.java) { service.changeTelephone(1, -1, telDTO) }
+        assertEquals("phoneId must be >= 0", error.message)
+    }
+
+    @Test
+    fun `changeTelephone throws NotFoundException when contact not found`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 87654321)
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.changeTelephone(1, 1, telDTO) }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `changeTelephone throws NotFoundException when telephone not found`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 87654321)
+        val contact = dummyContact()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { telephoneRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.changeTelephone(1, 1, telDTO) }
+        assertEquals("telephone not found", error.message)
+    }
+
+    @Test
+    fun `changeTelephone adds new telephone when not present`() {
+        val contact = dummyContact()
+        val existingTel = Telephone(prefix = 39, number = 123456, contact = mutableListOf(contact))
+        contact.telephone.add(existingTel)
+        val dtoInput = TelephoneDTO(prefix = 39, number = 654321)
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { telephoneRepo.findById(2) } returns Optional.of(existingTel)
+
+        val resultDto = service.changeTelephone(1, 2, dtoInput)
+
+        assertEquals(39, existingTel.prefix)
+        assertEquals(654321, existingTel.number)
+        assertEquals(1, resultDto.telephone.size)
+        val telDto = resultDto.telephone[0]
+        assertEquals("39654321", telDto)
+        verify(exactly = 0) { telephoneRepo.save(any()) }
+    }
+
+    @Test
+    fun `changeTelephone does not adds new telephone when present`(){
+        val contact1 = dummyContact()
+        val contact2 = dummyContact()
+        val sharedTel = Telephone(prefix = 39, number = 123456, contact = mutableListOf(contact1, contact2))
+        contact1.telephone.add(sharedTel)
+        contact2.telephone.add(sharedTel)
+        val dtoInput = TelephoneDTO(prefix = 44, number = 777888)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact1)
+        every { telephoneRepo.findById(2) } returns Optional.of(sharedTel)
+
+        val savedTel = Telephone(prefix = 44, number = 777888, contact = mutableListOf(contact1))
+        every { telephoneRepo.save(Telephone(prefix = 44, number = 777888, contact = mutableListOf(contact1)))} returns savedTel
+
+        val resultDto = service.changeTelephone(1, 2, dtoInput)
+
+        verify(exactly = 1) { telephoneRepo.save(any()) }
+        assertTrue(resultDto.telephone.any { it == "44777888" })
+        assertTrue(contact2.telephone.any { it == sharedTel })
     }
 }
