@@ -10,15 +10,15 @@ import jakarta.persistence.ManyToOne
 
 @Entity
 class Contact(
-    val name: String,
-    val surname: String,
+    var name: String,
+    var surname: String,
     @ManyToMany(mappedBy = "contact")
     val email: MutableList<Email>,
     @ManyToMany(mappedBy = "contact")
     val address: MutableList<Address>,
     @ManyToMany(mappedBy = "contact")
     val telephone: MutableList<Telephone>,
-    val ssn: String?,
+    var ssn: String?,
     var category: Category
 ): EntityBase(){
     fun updatePhone(phoneId: Int, tel: Telephone){

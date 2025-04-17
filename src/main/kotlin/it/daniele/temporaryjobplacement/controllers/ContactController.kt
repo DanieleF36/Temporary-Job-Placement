@@ -3,6 +3,7 @@ package it.daniele.temporaryjobplacement.controllers
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
+import it.daniele.temporaryjobplacement.dtos.UpdateContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid
@@ -36,6 +37,9 @@ class ContactController(private val service: ContactService) {
         return contact
     }
 
+    @PutMapping("/{contactId}")
+    fun update(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @Valid contactDTO: UpdateContactDTO): ContactDTO = service.update(contactId, contactDTO.name, contactDTO.surname, contactDTO.ssn)
+
     @PostMapping
     fun create(@Valid @RequestBody contactDTO: ContactDTO): ContactDTO = service.create(contactDTO)
 
@@ -45,11 +49,17 @@ class ContactController(private val service: ContactService) {
     @PostMapping("/{contactId}/emails")
     fun addEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @NotBlank email: String): ContactDTO = service.addNewEmail(contactId, email)
 
+    @PutMapping("/{contactId}/emails/{emailId}")
+    fun changeEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @PathVariable @Min(0, message = "contactId must be >= 0") emailId: Int, @RequestBody @NotBlank email: String): ContactDTO = service.changeEmail(contactId, emailId, email)
+
     @DeleteMapping("/{contactId}/emails/{emailId}")
     fun deleteEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @PathVariable @Min(0, message = "emailId must be >= 0") emailId: Int) = service.deleteEmail(contactId, emailId)
 
     @PutMapping("/{contactId}/category")
     fun modifyCategory(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody category: Category): ContactDTO = service.changeCategory(contactId, category)
+
+    @PostMapping("/{contactId}/addresses")
+    fun addAddress(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @NotBlank address: String): ContactDTO = service.addAddress(contactId, address)
 
     @PutMapping("/{contactId}/address/{addressId}")
     fun modifyAddress(
@@ -57,6 +67,9 @@ class ContactController(private val service: ContactService) {
         @PathVariable @Min(0, message = "addressId must be >= 0") addressId: Int,
         @RequestBody @NotBlank address: String
     ): ContactDTO = service.changeAddress(contactId, addressId, address)
+
+    @DeleteMapping("/{contactId}/address/{addressId}")
+    fun deleteAddress(@PathVariable @Min(0, message = "contactId must be >= 0") addressId: Int, @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int) = service.deleteAddress(contactId, addressId)
 
     @PostMapping("/{contactId}/phone")
     fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
@@ -67,7 +80,6 @@ class ContactController(private val service: ContactService) {
         @PathVariable @Min(0, message = "phone must be >= 0") phoneId: Int,
         @RequestBody @Valid telephoneDTO: TelephoneDTO,
     ): ContactDTO = service.changeTelephone(contactId, phoneId, telephoneDTO)
-
 
     @DeleteMapping("/{contactId}/phone/{phoneId}")
     fun deleteTelephone(

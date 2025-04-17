@@ -89,6 +89,18 @@ class ContactServiceImpl(
         return contactRepo.findById(contactId).getOrNull()?.toDTO()
     }
 
+    override fun update(contactId: Int, name: String?, surname: String?, ssn: String?): ContactDTO {
+        if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        if(name != null)
+            contact.name = name
+        if(surname != null)
+            contact.surname = surname
+        if(ssn != null)
+            contact.ssn = ssn
+        return contact.toDTO()
+    }
+
     override fun create(contactDTO: ContactDTO): ContactDTO {
         val emailEntity = mutableListOf<Email>()
         contactDTO.email.forEach { emailStr ->
@@ -141,6 +153,23 @@ class ContactServiceImpl(
         contactRepo.deleteById(contactId)
     }
 
+    override fun changeEmail(contactId: Int, emailId: Int, email: String): ContactDTO {
+        if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
+        if (emailId <= 0) throw IllegalArgumentException("emailId must be > 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val e = emailRepository.findById(emailId).getOrNull() ?: throw NotFoundException("email not found")
+        if(e.contact.size == 1)
+            e.email = email
+        else{
+            contact.email.removeIf { it.getId() == emailId }
+            e.contact.removeIf { it.getId() == contactId }
+            val newE = emailRepository.save(Email(email, mutableListOf(contact)))
+            contact.email.add(newE)
+        }
+        return contact.toDTO()
+    }
+
+
     override fun addNewEmail(contactId: Int, email: String): ContactDTO {
         if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
         if(email.isBlank()) throw IllegalArgumentException("email must be not blank")
@@ -170,6 +199,22 @@ class ContactServiceImpl(
         return contact.toDTO()
     }
 
+    override fun addAddress(contactId: Int, address: String): ContactDTO {
+        if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
+        if(address.isBlank()) throw IllegalArgumentException("address must be not blank")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val add = addressRepository.findByAddress(address)
+        val toAdd = if(add.isEmpty()) {
+            val a = Address(address, mutableListOf(contact))
+            addressRepository.save(a)
+            a
+        }
+        else
+            add[0]
+        contact.address.add(toAdd)
+        return contact.toDTO()
+    }
+
     override fun changeAddress(contactId: Int, addressId: Int, address: String): ContactDTO {
         if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
         if (addressId <= 0) throw IllegalArgumentException("addressId must be > 0")
@@ -186,6 +231,17 @@ class ContactServiceImpl(
         return contact.toDTO()
     }
 
+    override fun deleteAddress(contactId: Int, addressId: Int) {
+        if (contactId <= 0) throw IllegalArgumentException("contactId must be > 0")
+        if (addressId <= 0) throw IllegalArgumentException("addressId must be > 0")
+        val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
+        val add = addressRepository.findById(addressId).getOrNull() ?: throw NotFoundException("address not found")
+        contact.address.removeIf { it.getId() == addressId }
+        add.contact.removeIf { it.getId() == contactId }
+        if(add.contact.isEmpty())
+            addressRepository.deleteById(addressId)
+    }
+
     override fun addTelephone(contactId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
         if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
@@ -195,12 +251,21 @@ class ContactServiceImpl(
         return contact.toDTO()
     }
 
-    override fun modifyTelephone(contactId: Int, phoneId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
+    override fun changeTelephone(contactId: Int, phoneId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
         if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
         if (phoneId < 0) throw IllegalArgumentException("phoneId must be >= 0")
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
         val tel = telephoneRepository.findById(phoneId).getOrNull() ?: throw NotFoundException("telephone not found")
-        contact.updatePhone(phoneId, tel)
+        if(tel.contact.size == 1){
+            tel.prefix = telephoneDTO.prefix
+            tel.number = telephoneDTO.number
+        }
+        else{
+            contact.telephone.removeIf { it.getId() == phoneId }
+            tel.contact.removeIf { it.getId() == contactId }
+            val newTel = telephoneRepository.save(Telephone(telephoneDTO.prefix, telephoneDTO.number, mutableListOf(contact)))
+            contact.telephone.add(newTel)
+        }
         return contact.toDTO()
     }
 

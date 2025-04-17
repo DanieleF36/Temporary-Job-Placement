@@ -9,7 +9,7 @@ import jakarta.persistence.OneToMany
 @Entity
 class Email(
     @Column(unique = true, nullable = false)
-    val email: String,
+    var email: String,
     @ManyToMany
     val contact: MutableList<Contact>
 ): EntityBase()
