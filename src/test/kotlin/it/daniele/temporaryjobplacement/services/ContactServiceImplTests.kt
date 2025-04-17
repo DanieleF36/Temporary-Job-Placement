@@ -331,7 +331,7 @@ internal class ContactServiceImplTests {
         )
 
         val existingEmail = Email("bob@example.com", mutableListOf())
-        val existingAddress = Address("456 Elm St", emptyList())
+        val existingAddress = Address("456 Elm St", mutableListOf())
         val existingTelephone = Telephone(40, 12345678, mutableListOf())
 
         every { emailRepo.findByEmail("bob@example.com") } returns mutableListOf(existingEmail)
@@ -515,5 +515,72 @@ internal class ContactServiceImplTests {
 
         val result = service.changeCategory(1, Category.CUSTOMER)
         assertEquals(Category.CUSTOMER, result.category)
+    }
+
+    /** --------------------- changeAddress ------------------------- **/
+    @Test
+    fun `changeAddress throws IllegalArgumentException for non-positive contactId`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.changeAddress(-1, 2, "") }
+        assertEquals("contactId must be > 0", error.message)
+    }
+
+    @Test
+    fun `changeAddress throws IllegalArgumentException for non-positive addressId`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.changeAddress(1, 0, "") }
+        assertEquals("addressId must be > 0", error.message)
+    }
+
+    @Test
+    fun `changeAddress throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.changeAddress(1, 2, "") }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `changeAddress throws NotFoundException when address not found`() {
+        val contact = dummyContact()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { addressRepo.findById(2) } returns Optional.empty()
+
+        val error = assertThrows(NotFoundException::class.java) { service.changeAddress(1, 2, "") }
+        assertEquals("address not found", error.message)
+    }
+
+    @Test
+    fun `changeAddress adds new address when not present`() {
+        val contact = dummyContact()
+        val existing = Address(address = "789 Oak St", contact = mutableListOf(contact))
+        contact.address.add(existing)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { addressRepo.findById(2) } returns Optional.of(existing)
+
+        val dto = service.changeAddress(1, 2, "788 Oak St")
+
+        assertTrue(dto.address.any { it == "788 Oak St" })
+        assertEquals(1, dto.address.size)
+        verify(exactly = 0) { addressRepo.save(any()) }
+    }
+
+    @Test
+    fun `changeAddress does not add address`() {
+        val contact1 = dummyContact()
+        val contact2 = dummyContact(name = "Dan")
+        val shared = Address(address = "789 Oak St", contact = mutableListOf(contact1, contact2))
+        contact1.address.add(shared)
+        contact2.address.add(shared)
+
+        every { contactRepo.findById(1) } returns Optional.of(contact1)
+        every { addressRepo.findById(2) } returns Optional.of(shared)
+
+        val saved = Address(address = "788 Oak St", contact = mutableListOf(contact1))
+        every { addressRepo.save(Address("788 Oak St", mutableListOf(contact1)))} returns saved
+
+        val dto = service.changeAddress(1, 2, "788 Oak St")
+
+        verify(exactly = 1) { addressRepo.save(saved) }
+        assertTrue(dto.address.any { it == "788 Oak St" })
+        assertTrue(contact2.address.any { it.address == "789 Oak St" })
     }
 }
