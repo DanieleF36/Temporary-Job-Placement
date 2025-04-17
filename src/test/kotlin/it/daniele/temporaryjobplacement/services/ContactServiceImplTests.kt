@@ -686,4 +686,90 @@ internal class ContactServiceImplTests {
         assertTrue(resultDto.telephone.any { it == "44777888" })
         assertTrue(contact2.telephone.any { it == sharedTel })
     }
+
+    /** --------------------- deleteTelephone ------------------------- **/
+    @Test
+    fun `deleteTelephone throws IllegalArgumentException when contactId is negative`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.deleteTelephone(-1, 1) }
+        assertEquals("id must be >= 0", error.message)
+    }
+
+    @Test
+    fun `deleteTelephone throws IllegalArgumentException when phoneId is negative`() {
+        val error = assertThrows(IllegalArgumentException::class.java) { service.deleteTelephone(1, -1) }
+        assertEquals("phoneId must be >= 0", error.message)
+    }
+
+    @Test
+    fun `deleteTelephone throws NotFoundException when contact not found`() {
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.deleteTelephone(1, 1) }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `deleteTelephone throws NotFoundException when telephone not found`() {
+        val contact = dummyContact()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { telephoneRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.deleteTelephone(1, 1) }
+        assertEquals("telephone not found", error.message)
+    }
+
+    @Test
+    fun `deleteTelephone removes telephone and calls removeById when no contacts remain`() {
+        val telephone = Telephone(39, 12345678, mutableListOf())
+        EntityBase::class.java
+            .getDeclaredField("id")
+            .apply {
+                isAccessible = true
+                set(telephone, 1)
+            }
+        val contact = dummyContact()
+        EntityBase::class.java
+            .getDeclaredField("id")
+            .apply {
+                isAccessible = true
+                set(contact, 1)
+            }
+
+        telephone.contact.add(contact)
+        contact.telephone.add(telephone)
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { telephoneRepo.findById(1) } returns Optional.of(telephone)
+        every { telephoneRepo.removeById(1) } returns Unit
+
+        service.deleteTelephone(1, 1)
+        assertFalse(contact.telephone.contains(telephone))
+        verify(exactly = 1) { telephoneRepo.removeById(1) }
+    }
+
+    @Test
+    fun `deleteTelephone removes telephone without calling removeById when contacts remain`() {
+        val contact0 = dummyContact()
+        val contact = dummyContact()
+        EntityBase::class.java
+            .getDeclaredField("id")
+            .apply {
+                isAccessible = true
+                set(contact, 1)
+            }
+        val telephone = Telephone(39, 12345678, mutableListOf())
+        EntityBase::class.java
+            .getDeclaredField("id")
+            .apply {
+                isAccessible = true
+                set(telephone, 1)
+            }
+        telephone.contact.add(contact0)
+        telephone.contact.add(contact)
+        contact.telephone.add(telephone)
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { telephoneRepo.findById(1) } returns Optional.of(telephone)
+        every { telephoneRepo.removeById(1) } returns Unit
+
+        service.deleteTelephone(1, 1)
+        assertFalse(contact.telephone.contains(telephone))
+        verify(exactly = 0) { telephoneRepo.removeById(1) }
+    }
 }
