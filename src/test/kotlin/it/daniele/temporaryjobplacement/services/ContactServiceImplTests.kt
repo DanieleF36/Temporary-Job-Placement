@@ -583,4 +583,32 @@ internal class ContactServiceImplTests {
         assertTrue(dto.address.any { it == "788 Oak St" })
         assertTrue(contact2.address.any { it.address == "789 Oak St" })
     }
+
+    /** --------------------- addTelephone ------------------------- **/
+    @Test
+    fun `addTelephone throws IllegalArgumentException when contactId is negative`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 12345678)
+        val error = assertThrows(IllegalArgumentException::class.java) { service.addTelephone(-1, telDTO) }
+        assertEquals("id must be >= 0", error.message)
+    }
+
+    @Test
+    fun `addTelephone throws NotFoundException when contact not found`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 12345678)
+        every { contactRepo.findById(1) } returns Optional.empty()
+        val error = assertThrows(NotFoundException::class.java) { service.addTelephone(1, telDTO) }
+        assertEquals("contact not found", error.message)
+    }
+
+    @Test
+    fun `addTelephone saves telephone and adds it to contact`() {
+        val telDTO = TelephoneDTO(prefix = 39, number = 12345678)
+        val contact = dummyContact()
+        contact.telephone.clear()
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+        every { telephoneRepo.save(any<Telephone>()) } answers { firstArg<Telephone>() }
+
+        val result = service.addTelephone(1, telDTO)
+        assertTrue(result.telephone.isNotEmpty())
+    }
 }
