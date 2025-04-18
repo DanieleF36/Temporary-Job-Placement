@@ -429,4 +429,85 @@ class ContactIntegration: IntegrationTest() {
         val updated: ContactDTO = mapper.readValue(getResponse.body!!)
         assertTrue(updated.email.contains(newEmail))
     }
+
+    /** ------------------- changeEmail ------------------------ **/
+    private fun changeEmail(contactId: Int, emailId: Int, newEmail: String) = restTemplate.exchange(
+        "/API/contacts/$contactId/emails/$emailId",
+        HttpMethod.PUT,
+        HttpEntity(newEmail, HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }),
+        String::class.java
+    )
+    private fun getContact(contactId: Int): ContactDTO =
+        mapper.readValue(
+            restTemplate.getForEntity("/API/contacts/$contactId", String::class.java).body!!
+        )
+
+    @Test
+    fun `changeEmail throws BAD_REQUEST when contactId is negative`() {
+        val response = changeEmail(-1, 1, "new@example.com")
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `changeEmail throws BAD_REQUEST when emailId is negative`() {
+        val response = changeEmail(1, -1, "new@example.com")
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("emailId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `changeEmail throws BAD_REQUEST when newEmail is blank`() {
+        val response = changeEmail(1, 1, "")
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+    }
+
+    @Test
+    fun `changeEmail throws NOT_FOUND when contact does not exist`() {
+        val response = changeEmail(9999, 1, "new@example.com")
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `changeEmail throws NOT_FOUND when email does not exist`() {
+        val response = changeEmail(1, 9999, "new@example.com")
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("email not found", json["message"].asText())
+    }
+
+    @Test
+    fun `changeEmail updates existing email when unique`() {
+        val newEmail = "unique_changed@example.com"
+        val response = changeEmail(1, 1, newEmail)
+        assertEquals(HttpStatus.OK, response.statusCode)
+
+        val updated = getContact(1)
+        assertTrue(updated.email.contains(newEmail))
+        assertTrue(!updated.email.contains("example1@example.com"))
+    }
+
+    @Test
+    fun `changeEmail duplicates and updates email when shared`() {
+        restTemplate.postForEntity(
+            "/API/contacts/2/emails",
+            HttpEntity("example1@example.com", HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }),
+            String::class.java
+        )
+
+        val newEmail = "shared_changed@example.com"
+        val response = changeEmail(2, 1, newEmail)
+        assertEquals(HttpStatus.OK, response.statusCode)
+
+        val updated1 = getContact(1)
+        assertTrue(updated1.email.contains("example1@example.com"))
+
+        val updated2 = getContact(2)
+        assertTrue(updated2.email.contains(newEmail))
+        assertTrue(!updated2.email.contains("example1@example.com"))
+    }
 }
