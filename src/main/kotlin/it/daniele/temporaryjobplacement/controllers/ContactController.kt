@@ -44,12 +44,14 @@ class ContactController(private val service: ContactService) {
     fun update(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @Valid contactDTO: UpdateContactDTO): ContactDTO = service.update(contactId, contactDTO.name, contactDTO.surname, contactDTO.ssn)
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     fun create(@Valid @RequestBody contactDTO: ContactDTO): ContactDTO = service.create(contactDTO)
 
     @DeleteMapping("/{contactId}")
     fun delete(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int) = service.delete(contactId)
 
     @PostMapping("/{contactId}/emails")
+    @ResponseStatus(HttpStatus.CREATED)
     fun addEmail(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @NotBlank email: String): ContactDTO = service.addNewEmail(contactId, email)
 
     @PutMapping("/{contactId}/emails/{emailId}")
@@ -62,6 +64,7 @@ class ContactController(private val service: ContactService) {
     fun modifyCategory(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody category: Category): ContactDTO = service.changeCategory(contactId, category)
 
     @PostMapping("/{contactId}/addresses")
+    @ResponseStatus(HttpStatus.CREATED)
     fun addAddress(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @NotBlank address: String): ContactDTO = service.addAddress(contactId, address)
 
     @PutMapping("/{contactId}/address/{addressId}")
@@ -75,6 +78,7 @@ class ContactController(private val service: ContactService) {
     fun deleteAddress(@PathVariable @Min(0, message = "contactId must be >= 0") addressId: Int, @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int) = service.deleteAddress(contactId, addressId)
 
     @PostMapping("/{contactId}/phone")
+    @ResponseStatus(HttpStatus.CREATED)
     fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
 
     @PutMapping("/{contactId}/phone/{phoneId}")

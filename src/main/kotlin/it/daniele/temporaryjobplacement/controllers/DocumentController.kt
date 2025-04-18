@@ -42,6 +42,7 @@ class DocumentController(private val documentService: DocumentService) {
     }
 
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @ResponseStatus(HttpStatus.CREATED)
     fun createDocument(@RequestParam("file") file: MultipartFile): DocumentMetadataDTO {
         val name = file.originalFilename ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome file mancante")
         val contentType = file.contentType ?: "application/octet-stream"

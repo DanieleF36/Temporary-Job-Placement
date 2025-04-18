@@ -43,11 +43,13 @@ class MessageController(private val service: MessageService) {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     fun create(@RequestBody @Valid message: CreateMessageDTO): MessageDTO {
         return service.create(message.senderId, message.channel, message.subject, message.body, message.date)
     }
 
     @PostMapping("/{messageId}")
+    @ResponseStatus(HttpStatus.CREATED)
     fun changeState(
         @PathVariable @Positive(message = "Message id must be > 0") messageId: Int,
         @RequestBody @Valid change: ChangeStateDTO,
