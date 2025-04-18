@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.dtos.UpdateContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -510,4 +511,94 @@ class ContactIntegration: IntegrationTest() {
         assertTrue(updated2.email.contains(newEmail))
         assertTrue(!updated2.email.contains("example1@example.com"))
     }
+
+    /** ------------------- deleteEmail ------------------------ **/
+    private fun deleteEmail(contactId: Int, emailId: Int) = restTemplate.exchange(
+        "/API/contacts/$contactId/emails/$emailId",
+        HttpMethod.DELETE,
+        HttpEntity(null, HttpHeaders()),
+        String::class.java
+    )
+
+    @Test
+    fun `deleteEmail throws BAD_REQUEST when contactId is negative`() {
+        val response = deleteEmail(-1, 1)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteEmail throws BAD_REQUEST when emailId is negative`() {
+        val response = deleteEmail(1, -1)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("emailId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteEmail throws NOT_FOUND when contact does not exist`() {
+        val response = deleteEmail(9999, 1)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteEmail throws NOT_FOUND when email does not exist`() {
+        val response = deleteEmail(1, 9999)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("email not found", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteEmail removes email and can be retrieved`() {
+        restTemplate.postForEntity("/API/contacts/1/emails", HttpEntity("temp@example.com", HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }), String::class.java)
+        val contactBefore: ContactDTO = mapper.readValue(restTemplate.getForEntity("/API/contacts/1", String::class.java).body!!)
+        val emailIdToDelete = 0
+
+        val delResp = deleteEmail(1, contactBefore.email.indices.first()+1)
+        assertEquals(HttpStatus.OK, delResp.statusCode)
+
+        val getResp = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        val contactAfter: ContactDTO = mapper.readValue(getResp.body!!)
+        assertFalse(contactAfter.email.contains(contactBefore.email[emailIdToDelete]))
+    }
+
+    /** ------------------- modifyCategory ------------------------ **/
+    private fun modifyCategory(contactId: Int, category: Category) = restTemplate.exchange(
+        "/API/contacts/$contactId/category",
+        HttpMethod.PUT,
+        HttpEntity(category, HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }),
+        String::class.java
+    )
+
+    @Test
+    fun `modifyCategory throws BAD_REQUEST when contactId is negative`() {
+        val response = modifyCategory(-1, Category.PROFESSIONAL)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyCategory throws NOT_FOUND when contact does not exist`() {
+        val response = modifyCategory(9999, Category.PROFESSIONAL)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyCategory updates category and can be retrieved`() {
+        val modResp = modifyCategory(1, Category.PROFESSIONAL)
+        assertEquals(HttpStatus.OK, modResp.statusCode)
+
+        val getResp = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        assertEquals(HttpStatus.OK, getResp.statusCode)
+        val contact: ContactDTO = mapper.readValue(getResp.body!!)
+        assertEquals(Category.PROFESSIONAL, contact.category)
+    }
+
 }
