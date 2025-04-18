@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
@@ -93,5 +94,23 @@ class GlobalExceptionHandler {
             message = ex.reason
         )
         return ResponseEntity(error, ex.statusCode)
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun onMethodArgumentNotValid(ex: MethodArgumentNotValidException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+
+        val fieldMessages = ex.bindingResult.fieldErrors
+            .map { "${it.field} ${it.defaultMessage}" }
+
+        val message = fieldMessages.firstOrNull() ?: "Validation failed"
+
+        val error = ErrorResponse(
+            timestamp = LocalDateTime.now(),
+            status    = HttpStatus.BAD_REQUEST.value(),
+            error     = HttpStatus.BAD_REQUEST.reasonPhrase,
+            path      = request.requestURL.toString(),
+            message   = message
+        )
+        return ResponseEntity(error, HttpStatus.BAD_REQUEST)
     }
 }

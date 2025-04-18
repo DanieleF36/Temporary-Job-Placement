@@ -4,11 +4,12 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.http.HttpStatus
+import org.springframework.http.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -155,5 +156,120 @@ class ContactIntegration: IntegrationTest() {
         assertEquals(listOf("39123456789"), contact.telephone)
         assertEquals("RSSMRA80A01H501U", contact.ssn)
         assertEquals(Category.CUSTOMER, contact.category)
+    }
+
+    /** ------------------- create ------------------------ **/
+    private fun post(dto: ContactDTO): ResponseEntity<String> {
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(dto, headers)
+        return restTemplate.postForEntity("/API/contacts", request, String::class.java)
+    }
+
+    @Test
+    fun `create throws BAD_REQUEST when name is blank`() {
+        val dto = ContactDTO(
+            name = "",
+            surname = "Test",
+            email = listOf("test@example.com"),
+            address = listOf("Via Test 1"),
+            telephone = listOf("391234567890"),
+            ssn = null,
+            category = Category.UNKNOWN
+        )
+        val response = post(dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        println(json)
+        assertEquals("name must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `create throws BAD_REQUEST when surname is blank`() {
+        val dto = ContactDTO(
+            name = "Test",
+            surname = "",
+            email = listOf("test@example.com"),
+            address = listOf("Via Test 1"),
+            telephone = listOf("391234567890"),
+            ssn = null,
+            category = Category.UNKNOWN
+        )
+        val response = post(dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("surname must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `create throws BAD_REQUEST when email contains blank`() {
+        val dto = ContactDTO(
+            name = "Test",
+            surname = "User",
+            email = listOf(""),
+            address = listOf("Via Test 1"),
+            telephone = listOf("391234567890"),
+            ssn = null,
+            category = Category.UNKNOWN
+        )
+        val response = post(dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("email List elements must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `create throws BAD_REQUEST when address contains blank`() {
+        val dto = ContactDTO(
+            name = "Test",
+            surname = "User",
+            email = listOf("test@example.com"),
+            address = listOf(""),
+            telephone = listOf("391234567890"),
+            ssn = null,
+            category = Category.UNKNOWN
+        )
+        val response = post(dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("address List elements must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `create throws BAD_REQUEST when telephone contains blank`() {
+        val dto = ContactDTO(
+            name = "Test",
+            surname = "User",
+            email = listOf("test@example.com"),
+            address = listOf("Via Test 1"),
+            telephone = listOf(""),
+            ssn = null,
+            category = Category.UNKNOWN
+        )
+        val response = post(dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("telephone List elements must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `create returns CREATED and get retrieves contact`() {
+        val dto = ContactDTO(
+            name = "Anna",
+            surname = "Bianchi",
+            email = listOf("anna.bianchi@example.com"),
+            address = listOf("Via Firenze 3"),
+            telephone = listOf("393212345678"),
+            ssn = "BNCHNA80C22H501X",
+            category = Category.CUSTOMER
+        )
+        val createResponse = post(dto)
+        assertEquals(HttpStatus.CREATED, createResponse.statusCode)
+        val created: ContactDTO = mapper.readValue(createResponse.body!!)
+        assertTrue(created.id > 0)
+
+        val getResponse = restTemplate.getForEntity("/API/contacts/${created.id}", String::class.java)
+        assertEquals(HttpStatus.OK, getResponse.statusCode)
+        val fetched: ContactDTO = mapper.readValue(getResponse.body!!)
+        assertEquals(created, fetched)
     }
 }

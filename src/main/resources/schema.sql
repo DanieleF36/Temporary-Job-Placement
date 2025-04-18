@@ -25,8 +25,8 @@ CREATE TABLE email (
 
 CREATE TABLE telephone (
                            id     SERIAL PRIMARY KEY,
-                           prefix INT NOT NULL,
-                           number INT NOT NULL
+                           prefix VARCHAR(255) NOT NULL,
+                           number VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE contact (
@@ -38,7 +38,7 @@ CREATE TABLE contact (
                          CONSTRAINT chk_contact_category CHECK (category IN (0, 1, 2))
 );
 
-CREATE TABLE email_contact (
+CREATE TABLE contact_email (
                                email_id   INT NOT NULL,
                                contact_id INT NOT NULL,
                                PRIMARY KEY (email_id, contact_id),
@@ -46,7 +46,7 @@ CREATE TABLE email_contact (
                                CONSTRAINT fk_email_contact_contact FOREIGN KEY (contact_id) REFERENCES contact(id)   ON DELETE CASCADE
 );
 
-CREATE TABLE address_contact (
+CREATE TABLE contact_address (
                                  address_id INT NOT NULL,
                                  contact_id INT NOT NULL,
                                  PRIMARY KEY (address_id, contact_id),
@@ -54,7 +54,7 @@ CREATE TABLE address_contact (
                                  CONSTRAINT fk_address_contact_contact FOREIGN KEY (contact_id) REFERENCES contact(id)  ON DELETE CASCADE
 );
 
-CREATE TABLE telephone_contact (
+CREATE TABLE contact_telephone (
                                    telephone_id INT NOT NULL,
                                    contact_id   INT NOT NULL,
                                    PRIMARY KEY (telephone_id, contact_id),

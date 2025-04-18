@@ -1,5 +1,6 @@
 package it.daniele.temporaryjobplacement.dtos
 
+import it.daniele.temporaryjobplacement.annotation.NotBlankElements
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import it.daniele.temporaryjobplacement.entities.contact.Contact
@@ -7,12 +8,12 @@ import jakarta.validation.constraints.NotBlank
 
 
 data class ContactDTO(
-    val id: Int=0,
+    val id: Int = 0,
     @field:NotBlank val name: String,
     @field:NotBlank val surname: String,
-    val email: List<@NotBlank String>,
-    val address: List<@NotBlank  String>,
-    val telephone: List<@NotBlank String>,
+    @field:NotBlankElements val email: List<String>,
+    @field:NotBlankElements val address: List<String>,
+    @field:NotBlankElements val telephone: List<String>,
     @field:OptionalNotBlank val ssn: String?,
     val category: Category
 )

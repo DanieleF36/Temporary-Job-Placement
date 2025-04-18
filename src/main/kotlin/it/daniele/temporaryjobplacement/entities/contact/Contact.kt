@@ -12,11 +12,11 @@ import jakarta.persistence.ManyToOne
 class Contact(
     var name: String,
     var surname: String,
-    @ManyToMany(mappedBy = "contact")
+    @ManyToMany
     val email: MutableList<Email>,
-    @ManyToMany(mappedBy = "contact")
+    @ManyToMany
     val address: MutableList<Address>,
-    @ManyToMany(mappedBy = "contact")
+    @ManyToMany
     val telephone: MutableList<Telephone>,
     var ssn: String?,
     var category: Category

@@ -16,8 +16,8 @@ INSERT INTO email (email) VALUES ('example1@example.com'), ('example2@example.co
 INSERT INTO address (address) VALUES ('Via Roma 1, Rome'), ('Via Milano 2, Milan');
 
 INSERT INTO telephone (prefix, number)
-VALUES (39, 123456789),
-       (39, 987654321);
+VALUES ('39', '123456789'),
+       ('39', '987654321');
 
 -- CONTACT --------------------------------------------------------------
 INSERT INTO contact (name, surname, ssn, category)
@@ -25,13 +25,13 @@ VALUES
     ('Mario', 'Rossi', 'RSSMRA80A01H501U', 0),
     ('Luigi', 'Verdi', 'VRDLGU80B02H502U', 1);
 
-INSERT INTO email_contact      (email_id,   contact_id) VALUES (1, 1);
-INSERT INTO address_contact    (address_id, contact_id) VALUES (1, 1);
-INSERT INTO telephone_contact  (telephone_id, contact_id) VALUES (1, 1);
+INSERT INTO contact_email      (email_id,   contact_id) VALUES (1, 1);
+INSERT INTO contact_address    (address_id, contact_id) VALUES (1, 1);
+INSERT INTO contact_telephone  (telephone_id, contact_id) VALUES (1, 1);
 
-INSERT INTO email_contact      (email_id,   contact_id) VALUES (2, 2);
-INSERT INTO address_contact    (address_id, contact_id) VALUES (2, 2);
-INSERT INTO telephone_contact  (telephone_id, contact_id) VALUES (2, 2);
+INSERT INTO contact_email      (email_id,   contact_id) VALUES (2, 2);
+INSERT INTO contact_address    (address_id, contact_id) VALUES (2, 2);
+INSERT INTO contact_telephone  (telephone_id, contact_id) VALUES (2, 2);
 
 -- MESSAGE --------------------------------------------------------------
 INSERT INTO message (sender_id, date, subject, body, channel, priority, state)

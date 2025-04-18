@@ -8,9 +8,9 @@ import jakarta.persistence.ManyToMany
 @Entity
 class Telephone (
     @Column
-    var prefix: Int,
+    var prefix: String,
     @Column
-    var number: Int,
-    @ManyToMany
+    var number: String,
+    @ManyToMany(mappedBy = "telephone")
     val contact: MutableList<Contact>
 ): EntityBase()

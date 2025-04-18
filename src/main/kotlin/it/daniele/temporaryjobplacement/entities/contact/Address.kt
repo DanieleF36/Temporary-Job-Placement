@@ -10,6 +10,6 @@ import jakarta.persistence.ManyToMany
 class Address(
     @Column(unique = true, nullable = false)
     var address: String,
-    @ManyToMany
+    @ManyToMany(mappedBy = "address")
     val contact: MutableList<Contact>
 ): EntityBase()

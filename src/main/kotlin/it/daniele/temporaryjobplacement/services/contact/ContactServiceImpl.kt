@@ -124,8 +124,11 @@ class ContactServiceImpl(
 
         val telephoneEntity = mutableListOf<Telephone>()
         contactDTO.telephone.forEach { telStr ->
-            val prefix = telStr.subSequence(0, 2).toString().toInt()
-            val number = telStr.subSequence(2, telStr.length).toString().toInt()
+            val str = if(telStr.startsWith("+"))
+                telStr.drop(1)
+            else telStr
+            val prefix = str.subSequence(0, 2).toString()
+            val number = str.subSequence(2, telStr.length).toString()
             val tels = telephoneRepository.findByPrefixAndNumber(prefix, number)
             val tel = if(tels.size == 0)
                 telephoneRepository.save(Telephone(prefix, number, mutableListOf()))
