@@ -3,6 +3,7 @@ package it.daniele.temporaryjobplacement.integration
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import it.daniele.temporaryjobplacement.dtos.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.UpdateContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -158,6 +159,78 @@ class ContactIntegration: IntegrationTest() {
         assertEquals(Category.CUSTOMER, contact.category)
     }
 
+    /** ------------------- update ------------------------ **/
+    private fun update(id: Int, dto: UpdateContactDTO): ResponseEntity<String> {
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(dto, headers)
+        return restTemplate.exchange("/API/contacts/$id", HttpMethod.PUT, request, String::class.java)
+    }
+
+    @Test
+    fun `update throws BAD_REQUEST when id is negative`() {
+        val dto = UpdateContactDTO(name = "New", surname = "Name", ssn = null)
+        val response = update(-1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `update throws BAD_REQUEST when name is blank`() {
+        val dto = UpdateContactDTO(name = "", surname = "Name", ssn = null)
+        val response = update(1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("name If present, the field must be not blank", json["message"].asText())
+    }
+
+    @Test
+    fun `update throws BAD_REQUEST when surname is blank`() {
+        val dto = UpdateContactDTO(name = "New", surname = "", ssn = null)
+        val response = update(1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("surname If present, the field must be not blank", json["message"].asText())
+    }
+
+    @Test
+    fun `update throws BAD_REQUEST when ssn is blank`() {
+        val dto = UpdateContactDTO(name = "New", surname = "Name", ssn = "")
+        val response = update(1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("ssn If present, the field must be not blank", json["message"].asText())
+    }
+
+    @Test
+    fun `update throws NOT_FOUND when id does not exist`() {
+        val dto = UpdateContactDTO(name = "New", surname = "Name", ssn = null)
+        val response = update(9999, dto)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `update returns OK when updating contact`() {
+        val dto = UpdateContactDTO(name = "Luigi", surname = "Bianchi", ssn = "BIANLU80D03H501Y")
+        val updateResponse = update(1, dto)
+        assertEquals(HttpStatus.OK, updateResponse.statusCode)
+
+        val getResponse = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        assertEquals(HttpStatus.OK, getResponse.statusCode)
+        val updated: ContactDTO = mapper.readValue(getResponse.body!!)
+        assertEquals(1, updated.id)
+        assertEquals("Luigi", updated.name)
+        assertEquals("Bianchi", updated.surname)
+        assertEquals("BIANLU80D03H501Y", updated.ssn)
+
+        assertEquals(listOf("example1@example.com"), updated.email)
+        assertEquals(listOf("Via Roma 1, Rome"), updated.address)
+        assertEquals(listOf("39123456789"), updated.telephone)
+        assertEquals(Category.CUSTOMER, updated.category)
+    }
+
     /** ------------------- create ------------------------ **/
     private fun post(dto: ContactDTO): ResponseEntity<String> {
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
@@ -271,5 +344,89 @@ class ContactIntegration: IntegrationTest() {
         assertEquals(HttpStatus.OK, getResponse.statusCode)
         val fetched: ContactDTO = mapper.readValue(getResponse.body!!)
         assertEquals(created, fetched)
+    }
+
+    /** ------------------- delete ------------------------ **/
+    private fun delete(id: Int) = restTemplate.exchange(
+        "/API/contacts/$id", HttpMethod.DELETE,
+        HttpEntity(null, HttpHeaders()), String::class.java
+    )
+
+    @Test
+    fun `delete throws BAD_REQUEST when id is negative`() {
+        val response = delete(-1)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `delete throws NOT_FOUND when id does not exist`() {
+        val response = delete(9999)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `delete removes contact and get returns NOT_FOUND`() {
+        val deleteResponse = delete(1)
+        assertEquals(HttpStatus.OK, deleteResponse.statusCode)
+
+        val getResponse = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, getResponse.statusCode)
+    }
+
+    /** ------------------- addEmail ------------------------ **/
+    private fun addEmail(id: Int, email: String) = restTemplate.postForEntity(
+        "/API/contacts/$id/emails",
+        HttpEntity(email, HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }),
+        String::class.java
+    )
+
+    @Test
+    fun `addEmail throws BAD_REQUEST when id is negative`() {
+        val response = addEmail(-1, "new@example.com")
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `addEmail throws BAD_REQUEST when email is blank`() {
+        val response = addEmail(1, "")
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+    }
+
+    @Test
+    fun `addEmail throws NOT_FOUND when id does not exist`() {
+        val response = addEmail(9999, "new@example.com")
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `addEmail create a new email and can be retrieved`() {
+        val newEmail = "new@example.com"
+        val createResponse = addEmail(1, newEmail)
+        assertEquals(HttpStatus.CREATED, createResponse.statusCode)
+
+        val getResponse = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        assertEquals(HttpStatus.OK, getResponse.statusCode)
+        val updated: ContactDTO = mapper.readValue(getResponse.body!!)
+        assertTrue(updated.email.contains(newEmail))
+    }
+
+    @Test
+    fun `addEmail appends an existing email and can be retrieved`() {
+        val newEmail = "example2@example.com"
+        val createResponse = addEmail(1, newEmail)
+        assertEquals(HttpStatus.CREATED, createResponse.statusCode)
+
+        val getResponse = restTemplate.getForEntity("/API/contacts/1", String::class.java)
+        assertEquals(HttpStatus.OK, getResponse.statusCode)
+        val updated: ContactDTO = mapper.readValue(getResponse.body!!)
+        assertTrue(updated.email.contains(newEmail))
     }
 }

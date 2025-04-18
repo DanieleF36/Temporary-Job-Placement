@@ -1,12 +1,8 @@
 package it.daniele.temporaryjobplacement.entities.contact
 
 import it.daniele.temporaryjobplacement.entities.EntityBase
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.ManyToOne
+import it.daniele.temporaryjobplacement.entities.message.Message
+import jakarta.persistence.*
 
 @Entity
 class Contact(
@@ -19,7 +15,9 @@ class Contact(
     @ManyToMany
     val telephone: MutableList<Telephone>,
     var ssn: String?,
-    var category: Category
+    var category: Category,
+    @OneToMany( fetch = FetchType.LAZY, cascade = [CascadeType.REMOVE], mappedBy = "sender", orphanRemoval = true)
+    val messages: MutableList<Message> = mutableListOf()
 ): EntityBase(){
     fun updatePhone(phoneId: Int, tel: Telephone){
         telephone.removeIf { it.getId() == phoneId }
