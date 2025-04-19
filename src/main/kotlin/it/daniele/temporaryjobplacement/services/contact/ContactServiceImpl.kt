@@ -1,8 +1,8 @@
 package it.daniele.temporaryjobplacement.services.contact
 
-import it.daniele.temporaryjobplacement.dtos.ContactDTO
-import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
-import it.daniele.temporaryjobplacement.dtos.toDTO
+import it.daniele.temporaryjobplacement.dtos.contact.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.contact.TelephoneDTO
+import it.daniele.temporaryjobplacement.dtos.contact.toDTO
 import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.AddressRepository
@@ -103,27 +103,28 @@ class ContactServiceImpl(
 
     override fun create(contactDTO: ContactDTO): ContactDTO {
         val emailEntity = mutableListOf<Email>()
-        contactDTO.email.forEach { emailStr ->
-            val emails = emailRepository.findByEmail(emailStr)
+        contactDTO.email.forEach { emailDTO ->
+            val emails = emailRepository.findByEmail(emailDTO.email)
             val email = if(emails.size == 0)
-                emailRepository.save(Email(emailStr, mutableListOf()))
+                emailRepository.save(Email(emailDTO.email, mutableListOf()))
             else
                 emails[0]
             emailEntity.add(email)
         }
 
         val addressEntity = mutableListOf<Address>()
-        contactDTO.address.forEach { addrStr ->
-            val adds = addressRepository.findByAddress(addrStr)
+        contactDTO.address.forEach { addressDTO ->
+            val adds = addressRepository.findByAddress(addressDTO.address)
             val add = if(adds.size == 0)
-                addressRepository.save(Address(addrStr, mutableListOf()))
+                addressRepository.save(Address(addressDTO.address, mutableListOf()))
             else
                 adds[0]
             addressEntity.add(add)
         }
 
         val telephoneEntity = mutableListOf<Telephone>()
-        contactDTO.telephone.forEach { telStr ->
+        contactDTO.telephone.forEach { telDTO ->
+            val telStr = "${telDTO.prefix}${telDTO.number}"
             val str = if(telStr.startsWith("+"))
                 telStr.drop(1)
             else telStr
@@ -226,9 +227,9 @@ class ContactServiceImpl(
         if (add.contact.size == 1)
             add.address = address
         else{
-            contact.address.removeIf { it.getId() == contactId }
-            add.contact.removeIf { it.getId() == addressId }
-            val newAdd = addressRepository.save(Address(add.address, mutableListOf(contact)))
+            contact.address.removeIf { it.getId() == addressId }
+            add.contact.removeIf { it.getId() == contactId }
+            val newAdd = addressRepository.save(Address(address, mutableListOf(contact)))
             contact.address.add(newAdd)
         }
         return contact.toDTO()

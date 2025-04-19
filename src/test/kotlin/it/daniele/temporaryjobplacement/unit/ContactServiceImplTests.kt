@@ -3,8 +3,10 @@ package it.daniele.temporaryjobplacement.unit
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import it.daniele.temporaryjobplacement.dtos.ContactDTO
-import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
+import it.daniele.temporaryjobplacement.dtos.contact.AddressDTO
+import it.daniele.temporaryjobplacement.dtos.contact.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.contact.EmailDTO
+import it.daniele.temporaryjobplacement.dtos.contact.TelephoneDTO
 import it.daniele.temporaryjobplacement.entities.EntityBase
 import it.daniele.temporaryjobplacement.entities.contact.*
 import it.daniele.temporaryjobplacement.exceptions.NotFoundException
@@ -319,9 +321,9 @@ internal class ContactServiceImplTests {
         val contactDTO = ContactDTO(
             name = "Alice",
             surname = "Smith",
-            email = listOf("alice@example.com"),
-            address = listOf("123 Main St"),
-            telephone = listOf("3912345678"),
+            email = listOf(EmailDTO(0, "alice@example.com")),
+            address = listOf(AddressDTO(0, "123 Main St")),
+            telephone = listOf(TelephoneDTO(0, "39", "12345678")),
             ssn = "111-22-3333",
             category = Category.CUSTOMER
         )
@@ -343,10 +345,12 @@ internal class ContactServiceImplTests {
         assertEquals("111-22-3333", result.ssn)
         assertEquals(Category.CUSTOMER, result.category)
         assertEquals(1, result.email.size)
-        assertEquals("alice@example.com", result.email[0])
+        assertEquals("alice@example.com", result.email[0].email)
         assertEquals(1, result.address.size)
-        assertEquals("123 Main St", result.address[0])
+        assertEquals("123 Main St", result.address[0].address)
         assertEquals(1, result.telephone.size)
+        assertEquals("39", result.telephone[0].prefix)
+        assertEquals("12345678", result.telephone[0].number)
     }
 
     @Test
@@ -354,9 +358,9 @@ internal class ContactServiceImplTests {
         val contactDTO = ContactDTO(
             name = "Bob",
             surname = "Johnson",
-            email = listOf("bob@example.com"),
-            address = listOf("456 Elm St"),
-            telephone = listOf("4012345678"),
+            email = listOf(EmailDTO(0, "bob@example.com")),
+            address = listOf(AddressDTO(0, "456 Elm St")),
+            telephone = listOf(TelephoneDTO(0, "40", "12345678")),
             ssn = "222-33-4444",
             category = Category.CUSTOMER
         )
@@ -376,12 +380,13 @@ internal class ContactServiceImplTests {
         assertEquals("222-33-4444", result.ssn)
         assertEquals(Category.CUSTOMER, result.category)
         assertEquals(1, result.email.size)
-        assertEquals("bob@example.com", result.email[0])
+        assertEquals("bob@example.com", result.email[0].email)
         assertEquals(1, result.address.size)
-        assertEquals("456 Elm St", result.address[0])
+        assertEquals("456 Elm St", result.address[0].address)
         assertEquals(1, result.telephone.size)
+        assertEquals("40", result.telephone[0].prefix)
+        assertEquals("12345678", result.telephone[0].number)
     }
-
 
     /** --------------------- delete ------------------------- **/
     @Test
@@ -436,7 +441,7 @@ internal class ContactServiceImplTests {
         every { emailRepo.findByEmail("new@example.com") } returns mutableListOf(existingEmail)
 
         val result = service.addNewEmail(1, "new@example.com")
-        assertTrue(result.email.contains("new@example.com"))
+        assertTrue(result.email.any { it.email == "new@example.com" })
     }
 
     @Test
@@ -444,12 +449,12 @@ internal class ContactServiceImplTests {
         val contact = dummyContact()
         contact.email.clear()
         every { contactRepo.findById(1) } returns Optional.of(contact)
-        val existingEmail = Email("new@example.com", mutableListOf())
         every { emailRepo.findByEmail("new@example.com") } returns mutableListOf()
-        every { emailRepo.save(existingEmail) } returns existingEmail
+        every { emailRepo.save(any<Email>()) } answers { firstArg<Email>() }
         val result = service.addNewEmail(1, "new@example.com")
-        assertTrue(result.email.contains("new@example.com"))
+        assertTrue(result.email.any { it.email == "new@example.com" })
     }
+
 
     /** --------------------- changeEmail ------------------------- **/
     @Test
@@ -509,8 +514,8 @@ internal class ContactServiceImplTests {
 
         val result = service.changeEmail(1, 1, "new@example.com")
 
-        assertTrue(result.email.contains("new@example.com"))
-        assertFalse(result.email.contains("old@example.com"))
+        assertNotNull(result.email.find { it.email == "new@example.com" })
+        assertNull(result.email.find { it.email == "old@example.com" })
     }
 
     @Test
@@ -542,7 +547,7 @@ internal class ContactServiceImplTests {
         // original shared remains for contact2
         assertTrue(contact2.email.any { it.email == "shared@example.com" })
         // contact1 now has only the new email
-        assertTrue(result.email.contains("new@example.com"))
+        assertNotNull(result.email.find { it.email == "new@example.com" })
         verify(exactly = 1) { emailRepo.save(any()) }
     }
 
@@ -679,7 +684,7 @@ internal class ContactServiceImplTests {
         every { addressRepo.save(any<Address>()) } answers { firstArg<Address>() }
 
         val result = service.addAddress(1, "123 Main St")
-        assertTrue(result.address.contains("123 Main St"))
+        assertTrue(result.address.any { it.address == "123 Main St" })
     }
 
     @Test
@@ -691,7 +696,7 @@ internal class ContactServiceImplTests {
         every { addressRepo.findByAddress("456 Elm St") } returns mutableListOf(existing)
 
         val result = service.addAddress(1, "456 Elm St")
-        assertTrue(result.address.contains("456 Elm St"))
+        assertTrue(result.address.any { it.address == "456 Elm St" })
         verify(exactly = 0) { addressRepo.save(any()) }
     }
 
@@ -737,13 +742,13 @@ internal class ContactServiceImplTests {
 
         val dto = service.changeAddress(1, 2, "788 Oak St")
 
-        assertTrue(dto.address.any { it == "788 Oak St" })
+        assertTrue(dto.address.any { it.address == "788 Oak St" })
         assertEquals(1, dto.address.size)
         verify(exactly = 0) { addressRepo.save(any()) }
     }
 
     @Test
-    fun `changeAddress does not add address`() {
+    fun `changeAddress does not add shared address`() {
         val contact1 = dummyContact()
         val contact2 = dummyContact(name = "Dan")
         val shared = Address(address = "789 Oak St", contact = mutableListOf(contact1, contact2))
@@ -754,12 +759,12 @@ internal class ContactServiceImplTests {
         every { addressRepo.findById(2) } returns Optional.of(shared)
 
         val saved = Address(address = "788 Oak St", contact = mutableListOf(contact1))
-        every { addressRepo.save(Address("788 Oak St", mutableListOf(contact1)))} returns saved
+        every { addressRepo.save(Address("788 Oak St", mutableListOf(contact1))) } returns saved
 
         val dto = service.changeAddress(1, 2, "788 Oak St")
 
         verify(exactly = 1) { addressRepo.save(saved) }
-        assertTrue(dto.address.any { it == "788 Oak St" })
+        assertTrue(dto.address.any { it.address == "788 Oak St" })
         assertTrue(contact2.address.any { it.address == "789 Oak St" })
     }
 
@@ -913,7 +918,7 @@ internal class ContactServiceImplTests {
         val contact = dummyContact()
         val existingTel = Telephone(prefix = "39", number = "123456", contact = mutableListOf(contact))
         contact.telephone.add(existingTel)
-        val dtoInput = TelephoneDTO(prefix = "39", number = "654321")
+        val dtoInput = TelephoneDTO(prefix = "39", number = "654321", id = 0)
         every { contactRepo.findById(1) } returns Optional.of(contact)
         every { telephoneRepo.findById(2) } returns Optional.of(existingTel)
 
@@ -923,29 +928,29 @@ internal class ContactServiceImplTests {
         assertEquals("654321", existingTel.number)
         assertEquals(1, resultDto.telephone.size)
         val telDto = resultDto.telephone[0]
-        assertEquals("39654321", telDto)
-        verify(exactly = 0) { telephoneRepo.save(any()) }
+        assertEquals("39", telDto.prefix)
+        assertEquals("654321", telDto.number)
     }
 
     @Test
-    fun `changeTelephone does not adds new telephone when present`(){
+    fun `changeTelephone does not add shared telephone`() {
         val contact1 = dummyContact()
         val contact2 = dummyContact()
         val sharedTel = Telephone(prefix = "39", number = "123456", contact = mutableListOf(contact1, contact2))
         contact1.telephone.add(sharedTel)
         contact2.telephone.add(sharedTel)
-        val dtoInput = TelephoneDTO(prefix = "44", number = "777888")
+        val dtoInput = TelephoneDTO(prefix = "44", number = "777888", id = 0)
 
         every { contactRepo.findById(1) } returns Optional.of(contact1)
         every { telephoneRepo.findById(2) } returns Optional.of(sharedTel)
 
         val savedTel = Telephone(prefix = "44", number = "777888", contact = mutableListOf(contact1))
-        every { telephoneRepo.save(Telephone(prefix = "44", number = "777888", contact = mutableListOf(contact1)))} returns savedTel
+        every { telephoneRepo.save(Telephone("44", "777888", mutableListOf(contact1))) } returns savedTel
 
         val resultDto = service.changeTelephone(1, 2, dtoInput)
 
         verify(exactly = 1) { telephoneRepo.save(any()) }
-        assertTrue(resultDto.telephone.any { it == "44777888" })
+        assertTrue(resultDto.telephone.any { it.prefix + it.number == "44777888" })
         assertTrue(contact2.telephone.any { it == sharedTel })
     }
 

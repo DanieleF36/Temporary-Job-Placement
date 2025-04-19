@@ -1,8 +1,8 @@
 package it.daniele.temporaryjobplacement.controllers
 
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
-import it.daniele.temporaryjobplacement.dtos.ContactDTO
-import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
+import it.daniele.temporaryjobplacement.dtos.contact.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.contact.TelephoneDTO
 import it.daniele.temporaryjobplacement.dtos.UpdateContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import it.daniele.temporaryjobplacement.services.contact.ContactService
@@ -35,7 +35,7 @@ class ContactController(private val service: ContactService) {
     }
 
     @GetMapping("/{contactId}")
-    fun get(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int): ContactDTO{
+    fun get(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int): ContactDTO {
         val contact = service.get(contactId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "id not found")
         return contact
     }
@@ -75,7 +75,7 @@ class ContactController(private val service: ContactService) {
     ): ContactDTO = service.changeAddress(contactId, addressId, address)
 
     @DeleteMapping("/{contactId}/address/{addressId}")
-    fun deleteAddress(@PathVariable @Min(0, message = "contactId must be >= 0") addressId: Int, @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int) = service.deleteAddress(contactId, addressId)
+    fun deleteAddress(@PathVariable @Min(0, message = "addressId must be >= 0") addressId: Int, @PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int) = service.deleteAddress(contactId, addressId)
 
     @PostMapping("/{contactId}/phone")
     @ResponseStatus(HttpStatus.CREATED)

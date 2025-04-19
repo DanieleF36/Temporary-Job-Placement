@@ -1,7 +1,7 @@
 package it.daniele.temporaryjobplacement.services.contact
 
-import it.daniele.temporaryjobplacement.dtos.ContactDTO
-import it.daniele.temporaryjobplacement.dtos.TelephoneDTO
+import it.daniele.temporaryjobplacement.dtos.contact.ContactDTO
+import it.daniele.temporaryjobplacement.dtos.contact.TelephoneDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Sort
