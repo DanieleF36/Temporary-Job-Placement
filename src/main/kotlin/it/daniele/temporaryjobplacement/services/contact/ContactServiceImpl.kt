@@ -249,8 +249,11 @@ class ContactServiceImpl(
     override fun addTelephone(contactId: Int, telephoneDTO: TelephoneDTO): ContactDTO {
         if (contactId < 0) throw IllegalArgumentException("id must be >= 0")
         val contact = contactRepo.findById(contactId).getOrNull() ?: throw NotFoundException("contact not found")
-        val tel = Telephone(telephoneDTO.prefix, telephoneDTO.number, mutableListOf())
-        telephoneRepository.save(tel)
+        val tels = telephoneRepository.findByPrefixAndNumber(telephoneDTO.prefix, telephoneDTO.number)
+        val tel = if(tels.isEmpty())
+            telephoneRepository.save(Telephone(telephoneDTO.prefix, telephoneDTO.number, mutableListOf(contact)))
+        else
+            tels[0]
         contact.telephone.add(tel)
         return contact.toDTO()
     }

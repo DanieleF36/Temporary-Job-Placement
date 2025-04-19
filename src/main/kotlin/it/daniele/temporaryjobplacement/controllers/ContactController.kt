@@ -79,7 +79,7 @@ class ContactController(private val service: ContactService) {
 
     @PostMapping("/{contactId}/phone")
     @ResponseStatus(HttpStatus.CREATED)
-    fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
+    fun addTelephone(@PathVariable @Min(0, message = "contactId must be >= 0") contactId: Int, @RequestBody @Valid telephoneDTO: TelephoneDTO): ContactDTO = service.addTelephone(contactId, telephoneDTO)
 
     @PutMapping("/{contactId}/phone/{phoneId}")
     fun modifyTelephone(

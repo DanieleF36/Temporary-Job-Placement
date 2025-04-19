@@ -747,4 +747,230 @@ class ContactIntegration: IntegrationTest() {
         val after = getContact(1)
         assertFalse(after.address.any { it.id == addrId })
     }
+
+    /** ------------------- addTelephone ------------------------ **/
+    private fun addTelephone(contactId: Int, tel: TelephoneDTO): ResponseEntity<String> =
+        restTemplate.postForEntity(
+            "/API/contacts/$contactId/phone",
+            HttpEntity(tel, HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }),
+            String::class.java
+        )
+
+    @Test
+    fun `addTelephone throws BAD_REQUEST when contactId is negative`() {
+        val dto = TelephoneDTO(prefix = "39", number = "1234")
+        val response = addTelephone(-1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `addTelephone throws BAD_REQUEST when prefix is blank`() {
+        val dto = TelephoneDTO(prefix = "", number = "1234")
+        val response = addTelephone(1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("prefix must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `addTelephone throws BAD_REQUEST when number is blank`() {
+        val dto = TelephoneDTO(prefix = "39", number = "")
+        val response = addTelephone(1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("number must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `addTelephone throws NOT_FOUND when contact does not exist`() {
+        val dto = TelephoneDTO(prefix = "39", number = "123456789")
+        val response = addTelephone(9999, dto)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `addTelephone appends telephone and can be retrieved`() {
+        val dto = TelephoneDTO(prefix = "39", number = "111222333")
+        val beforeSize = getContact(1).telephone.size
+        val resp = addTelephone(1, dto)
+        assertEquals(HttpStatus.CREATED, resp.statusCode)
+
+        val after = getContact(1)
+        assertEquals(beforeSize + 1, after.telephone.size)
+        assertTrue(after.telephone.any { it.prefix == dto.prefix && it.number == dto.number })
+    }
+
+    /** ------------------- modifyTelephone ------------------------ **/
+    private fun modifyTelephone(contactId: Int, phoneId: Int, tel: TelephoneDTO): ResponseEntity<String> =
+        restTemplate.exchange(
+            "/API/contacts/$contactId/phone/$phoneId",
+            HttpMethod.PUT,
+            HttpEntity(tel, HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }),
+            String::class.java
+        )
+
+    @Test
+    fun `modifyTelephone throws BAD_REQUEST when contactId is negative`() {
+        val dto = TelephoneDTO(prefix = "39", number = "0000")
+        val resp = modifyTelephone(-1, 1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
+        val json = mapper.readTree(resp.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyTelephone throws BAD_REQUEST when phoneId is negative`() {
+        val dto = TelephoneDTO(prefix = "39", number = "0000")
+        val resp = modifyTelephone(1, -1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
+        val json = mapper.readTree(resp.body!!)
+        assertEquals("phone must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyTelephone throws BAD_REQUEST when prefix is blank`() {
+        val dto = TelephoneDTO(prefix = "", number = "0000")
+        val resp = modifyTelephone(1, 1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
+        val json = mapper.readTree(resp.body!!)
+        assertEquals("prefix must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyTelephone throws BAD_REQUEST when number is blank`() {
+        val dto = TelephoneDTO(prefix = "39", number = "")
+        val resp = modifyTelephone(1, 1, dto)
+        assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
+        val json = mapper.readTree(resp.body!!)
+        assertEquals("number must not be blank", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyTelephone throws NOT_FOUND when contact does not exist`() {
+        val dto = TelephoneDTO(prefix = "39", number = "0000")
+        val resp = modifyTelephone(9999, 1, dto)
+        assertEquals(HttpStatus.NOT_FOUND, resp.statusCode)
+        val json = mapper.readTree(resp.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyTelephone throws NOT_FOUND when telephone does not exist`() {
+        val dto = TelephoneDTO(prefix = "39", number = "0000")
+        val resp = modifyTelephone(1, 9999, dto)
+        assertEquals(HttpStatus.NOT_FOUND, resp.statusCode)
+        val json = mapper.readTree(resp.body!!)
+        assertEquals("telephone not found", json["message"].asText())
+    }
+
+    @Test
+    fun `modifyTelephone updates unique telephone and can be retrieved`() {
+        val dto = TelephoneDTO(prefix = "39", number = "222333444")
+        val resp = modifyTelephone(1, 1, dto)
+        assertEquals(HttpStatus.OK, resp.statusCode)
+        val updated = getContact(1)
+        assertTrue(updated.telephone.any { it.prefix == dto.prefix && it.number == dto.number })
+        assertTrue(!updated.telephone.any { it.prefix == "39" && it.number == "123456789" })
+    }
+
+    @Test
+    fun `modifyTelephone duplicates and updates in shared branch`() {
+        addTelephone(2, TelephoneDTO(prefix = "39", number = "123456789"))
+        val dto = TelephoneDTO(prefix = "39", number = "555666777")
+        val resp = modifyTelephone(2, 1, dto)
+        assertEquals(HttpStatus.OK, resp.statusCode)
+
+        val c1 = getContact(1)
+        assertTrue(c1.telephone.any { it.prefix == "39" && it.number == "123456789" })
+
+        val c2 = getContact(2)
+        assertTrue(c2.telephone.any { it.prefix == dto.prefix && it.number == dto.number })
+        assertTrue(!c2.telephone.any { it.prefix == "39" && it.number == "123456789" })
+    }
+
+    /** ------------------- deleteTelephone ------------------------ **/
+    private fun deleteTelephone(contactId: Int, phoneId: Int): ResponseEntity<String> =
+        restTemplate.exchange(
+            "/API/contacts/$contactId/phone/$phoneId",
+            HttpMethod.DELETE,
+            HttpEntity(null, HttpHeaders()),
+            String::class.java
+        )
+
+    private fun createContactWithTelephone(telephone: String): Int {
+        val dto = ContactDTO(
+            name = "Test",
+            surname = "Share",
+            email = listOf(EmailDTO(id = 0, email = "test.share@example.com")),
+            address = listOf(AddressDTO(id = 0, address = "Via Condivisa 1")),
+            telephone = listOf(TelephoneDTO(id = 0, prefix = telephone.substring(0,2), number = telephone.substring(2))),
+            ssn = null,
+            category = Category.UNKNOWN
+        )
+        val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+        val request = HttpEntity(dto, headers)
+        val resp = restTemplate.postForEntity("/API/contacts", request, String::class.java)
+        val created: ContactDTO = mapper.readValue(resp.body!!)
+        return created.id
+    }
+
+    @Test
+    fun `deleteTelephone throws BAD_REQUEST when contactId is negative`() {
+        val response = deleteTelephone(-1, 1)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contactId must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteTelephone throws BAD_REQUEST when phoneId is negative`() {
+        val response = deleteTelephone(1, -1)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("phone must be >= 0", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteTelephone throws NOT_FOUND when contact does not exist`() {
+        val response = deleteTelephone(9999, 1)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("contact not found", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteTelephone throws NOT_FOUND when telephone does not exist`() {
+        val response = deleteTelephone(1, 9999)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        val json = mapper.readTree(response.body!!)
+        assertEquals("telephone not found", json["message"].asText())
+    }
+
+    @Test
+    fun `deleteTelephone removes telephone when single owner`() {
+        val resp = deleteTelephone(1, 1)
+        assertEquals(HttpStatus.OK, resp.statusCode)
+        val deleted: ContactDTO = mapper.readValue(resp.body!!)
+        assertTrue(deleted.telephone.none { it.id == 1 })
+
+        val after = getContact(1)
+        assertTrue(after.telephone.none { it.id == 1 })
+    }
+
+    @Test
+    fun `deleteTelephone removes link but not entity when shared owner`() {
+        val newContactId = createContactWithTelephone("39123456789")
+
+        val resp = deleteTelephone(newContactId, 1)
+        assertEquals(HttpStatus.OK, resp.statusCode)
+        val deleted: ContactDTO = mapper.readValue(resp.body!!)
+        assertTrue(deleted.telephone.none { it.id == 1 })
+
+        val original = getContact(1)
+        assertTrue(original.telephone.any { it.id == 1 })
+    }
 }
