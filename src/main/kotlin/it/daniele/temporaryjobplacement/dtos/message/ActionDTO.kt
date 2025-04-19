@@ -1,4 +1,4 @@
-package it.daniele.temporaryjobplacement.dtos
+package it.daniele.temporaryjobplacement.dtos.message
 
 import it.daniele.temporaryjobplacement.entities.message.Action
 import it.daniele.temporaryjobplacement.entities.message.State
@@ -11,5 +11,5 @@ data class ActionDTO(
     val comment: String?,
 )
 
-fun Action.toDTO(): ActionDTO=
+fun Action.toDTO(): ActionDTO =
         ActionDTO(this.getId(), this.state, this.date, this.comment)

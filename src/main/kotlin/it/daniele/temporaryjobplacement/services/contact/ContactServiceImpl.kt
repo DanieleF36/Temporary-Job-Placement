@@ -129,7 +129,7 @@ class ContactServiceImpl(
                 telStr.drop(1)
             else telStr
             val prefix = str.subSequence(0, 2).toString()
-            val number = str.subSequence(2, telStr.length).toString()
+            val number = str.substring(2)
             val tels = telephoneRepository.findByPrefixAndNumber(prefix, number)
             val tel = if(tels.size == 0)
                 telephoneRepository.save(Telephone(prefix, number, mutableListOf()))

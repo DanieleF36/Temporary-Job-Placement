@@ -1,7 +1,7 @@
 package it.daniele.temporaryjobplacement.services
 
-import it.daniele.temporaryjobplacement.dtos.DocumentBinaryDataDTO
-import it.daniele.temporaryjobplacement.dtos.DocumentMetadataDTO
+import it.daniele.temporaryjobplacement.dtos.document.DocumentBinaryDataDTO
+import it.daniele.temporaryjobplacement.dtos.document.DocumentMetadataDTO
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Sort
 

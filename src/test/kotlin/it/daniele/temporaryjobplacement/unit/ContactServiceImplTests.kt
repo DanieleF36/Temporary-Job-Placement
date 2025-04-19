@@ -304,6 +304,18 @@ internal class ContactServiceImplTests {
     }
 
     @Test
+    fun `update with no changes does not modify contact`() {
+        val contact = dummyContact(name = "OriginalName", surname = "OriginalSurname", ssn = "000")
+        every { contactRepo.findById(1) } returns Optional.of(contact)
+
+        val result = service.update(1, null, null, null)
+
+        assertEquals("OriginalName", result.name)
+        assertEquals("OriginalSurname", result.surname)
+        assertEquals("000", result.ssn)
+    }
+
+    @Test
     fun `update changes name, surname and ssn of existing contact`() {
         val contact = dummyContact(name = "Old", surname = "Name", ssn = "000")
         every { contactRepo.findById(1) } returns Optional.of(contact)
@@ -385,6 +397,41 @@ internal class ContactServiceImplTests {
         assertEquals("456 Elm St", result.address[0].address)
         assertEquals(1, result.telephone.size)
         assertEquals("40", result.telephone[0].prefix)
+        assertEquals("12345678", result.telephone[0].number)
+    }
+
+    @Test
+    fun `create handles telephone number with leading plus sign`() {
+        val contactDTO = ContactDTO(
+            name = "Plus",
+            surname = "Test",
+            email = listOf(EmailDTO(0, "plus@example.com")),
+            address = listOf(AddressDTO(0, "987 Plus St")),
+            telephone = listOf(TelephoneDTO(0, "+39", "12345678")),
+            ssn = "333-44-5555",
+            category = Category.CUSTOMER
+        )
+
+        every { emailRepo.findByEmail("plus@example.com") } returns mutableListOf()
+        every { emailRepo.save(any<Email>()) } answers { firstArg<Email>() }
+
+        every { addressRepo.findByAddress("987 Plus St") } returns mutableListOf()
+        every { addressRepo.save(any<Address>()) } answers { firstArg<Address>() }
+
+        every { telephoneRepo.findByPrefixAndNumber("39", "12345678") } returns mutableListOf()
+        every { telephoneRepo.save(any<Telephone>()) } answers { firstArg<Telephone>() }
+
+        every { contactRepo.save(any<Contact>()) } answers { firstArg<Contact>() }
+
+        val result = service.create(contactDTO)
+
+        assertEquals("Plus", result.name)
+        assertEquals("Test", result.surname)
+        assertEquals("333-44-5555", result.ssn)
+        assertEquals(Category.CUSTOMER, result.category)
+
+        assertEquals(1, result.telephone.size)
+        assertEquals("39", result.telephone[0].prefix)
         assertEquals("12345678", result.telephone[0].number)
     }
 
@@ -871,14 +918,17 @@ internal class ContactServiceImplTests {
     @Test
     fun `addTelephone saves telephone and adds it to contact`() {
         val telDTO = TelephoneDTO(prefix = "39", number = "12345678")
-        val contact = dummyContact()
-        contact.telephone.clear()
+        val contact = dummyContact().apply { telephone.clear() }
+
         every { contactRepo.findById(1) } returns Optional.of(contact)
-        every { telephoneRepo.save(any<Telephone>()) } answers { firstArg<Telephone>() }
+        every { telephoneRepo.findByPrefixAndNumber("39", "12345678") } returns mutableListOf()
+        every { telephoneRepo.save(any<Telephone>()) } answers { firstArg() }
 
         val result = service.addTelephone(1, telDTO)
+
         assertTrue(result.telephone.isNotEmpty())
     }
+
 
     /** --------------------- changeTelephone ------------------------- **/
     @Test

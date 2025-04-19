@@ -1,6 +1,6 @@
 package it.daniele.temporaryjobplacement.controllers
 
-import it.daniele.temporaryjobplacement.dtos.ActionDTO
+import it.daniele.temporaryjobplacement.dtos.message.ActionDTO
 import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.dtos.message.ChangeStateDTO
 import it.daniele.temporaryjobplacement.dtos.message.CreateMessageDTO

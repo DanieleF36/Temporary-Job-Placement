@@ -1,4 +1,4 @@
-package it.daniele.temporaryjobplacement.dtos
+package it.daniele.temporaryjobplacement.dtos.document
 
 import it.daniele.temporaryjobplacement.entities.DocumentBinaryData
 

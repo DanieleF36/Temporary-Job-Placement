@@ -18,9 +18,4 @@ class Contact(
     var category: Category,
     @OneToMany( fetch = FetchType.LAZY, cascade = [CascadeType.REMOVE], mappedBy = "sender", orphanRemoval = true)
     val messages: MutableList<Message> = mutableListOf()
-): EntityBase(){
-    fun updatePhone(phoneId: Int, tel: Telephone){
-        telephone.removeIf { it.getId() == phoneId }
-        telephone.add(tel)
-    }
-}
+): EntityBase()

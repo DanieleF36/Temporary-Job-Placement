@@ -2,7 +2,7 @@ package it.daniele.temporaryjobplacement.integration
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import it.daniele.temporaryjobplacement.dtos.ActionDTO
+import it.daniele.temporaryjobplacement.dtos.message.ActionDTO
 import it.daniele.temporaryjobplacement.dtos.MessageDTO
 import it.daniele.temporaryjobplacement.entities.message.Channel
 import it.daniele.temporaryjobplacement.entities.message.State
@@ -147,7 +147,7 @@ class MessageIntegrationTest : IntegrationTest() {
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val request = HttpEntity(json, headers)
         val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
-        assertEquals(HttpStatus.OK, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
+        assertEquals(HttpStatus.CREATED, response.statusCode)
         val msg: MessageDTO = mapper.readValue(response.body!!)
         assertTrue(msg.id > 0, "Created message should have an ID greater than 0")
         assertEquals("Test subject", msg.subject, "Subject should match input")
@@ -183,7 +183,7 @@ class MessageIntegrationTest : IntegrationTest() {
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val request = HttpEntity(json, headers)
         val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
-        assertEquals(HttpStatus.OK, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
+        assertEquals(HttpStatus.CREATED, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
         val msg: MessageDTO = mapper.readValue(response.body!!)
         assertTrue(msg.id > 0, "Created message should have an ID greater than 0")
         assertEquals(null, msg.subject, "Subject should match input")
@@ -201,7 +201,7 @@ class MessageIntegrationTest : IntegrationTest() {
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val request = HttpEntity(json, headers)
         val response = restTemplate.postForEntity("/API/messages", request, String::class.java)
-        assertEquals(HttpStatus.OK, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
+        assertEquals(HttpStatus.CREATED, response.statusCode, "POST with valid data should return 200 OK ${response.body}")
         val msg: MessageDTO = mapper.readValue(response.body!!)
         assertTrue(msg.id > 0, "Created message should have an ID greater than 0")
         assertEquals("Test subject", msg.subject, "Subject should match input")
@@ -229,7 +229,7 @@ class MessageIntegrationTest : IntegrationTest() {
         val headers = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
         val request = HttpEntity(json, headers)
         val response = restTemplate.postForEntity("/API/messages/1", request, String::class.java)
-        assertEquals(HttpStatus.OK, response.statusCode, "POST to change state should return 200 OK")
+        assertEquals(HttpStatus.CREATED, response.statusCode, "POST to change state should return 200 OK")
         val msg: MessageDTO = mapper.readValue(response.body!!)
         assertEquals(1, msg.id, "Message ID should remain 1")
         assertEquals("READ", msg.state.toString(), "State should be updated to READ")

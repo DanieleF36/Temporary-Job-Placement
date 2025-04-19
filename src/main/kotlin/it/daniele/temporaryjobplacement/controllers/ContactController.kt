@@ -3,7 +3,7 @@ package it.daniele.temporaryjobplacement.controllers
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 import it.daniele.temporaryjobplacement.dtos.contact.ContactDTO
 import it.daniele.temporaryjobplacement.dtos.contact.TelephoneDTO
-import it.daniele.temporaryjobplacement.dtos.UpdateContactDTO
+import it.daniele.temporaryjobplacement.dtos.contact.UpdateContactDTO
 import it.daniele.temporaryjobplacement.entities.contact.Category
 import it.daniele.temporaryjobplacement.services.contact.ContactService
 import jakarta.validation.Valid

@@ -1,4 +1,4 @@
-package it.daniele.temporaryjobplacement.dtos
+package it.daniele.temporaryjobplacement.dtos.contact
 
 import it.daniele.temporaryjobplacement.annotation.OptionalNotBlank
 

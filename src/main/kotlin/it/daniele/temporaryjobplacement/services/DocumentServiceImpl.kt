@@ -1,8 +1,8 @@
 package it.daniele.temporaryjobplacement.services
 
-import it.daniele.temporaryjobplacement.dtos.DocumentBinaryDataDTO
-import it.daniele.temporaryjobplacement.dtos.DocumentMetadataDTO
-import it.daniele.temporaryjobplacement.dtos.toDto
+import it.daniele.temporaryjobplacement.dtos.document.DocumentBinaryDataDTO
+import it.daniele.temporaryjobplacement.dtos.document.DocumentMetadataDTO
+import it.daniele.temporaryjobplacement.dtos.document.toDto
 import it.daniele.temporaryjobplacement.entities.DocumentBinaryData
 import it.daniele.temporaryjobplacement.entities.DocumentMetadata
 import it.daniele.temporaryjobplacement.exceptions.DocumentNameAlreadyExists

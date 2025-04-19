@@ -1,15 +1,15 @@
-package it.daniele.temporaryjobplacement.services
-/*
+package it.daniele.temporaryjobplacement.unit
+
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import it.daniele.temporaryjobplacement.controllers.SortOption
 import it.daniele.temporaryjobplacement.entities.DocumentBinaryData
 import it.daniele.temporaryjobplacement.entities.DocumentMetadata
 import it.daniele.temporaryjobplacement.exceptions.DocumentNameAlreadyExists
-import it.daniele.temporaryjobplacement.exceptions.DocumentNotFoundException
+import it.daniele.temporaryjobplacement.exceptions.NotFoundException
 import it.daniele.temporaryjobplacement.repositories.DocumentBinaryRepository
 import it.daniele.temporaryjobplacement.repositories.DocumentMetadataRepository
+import it.daniele.temporaryjobplacement.services.DocumentServiceImpl
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.Page
@@ -28,14 +28,14 @@ internal class DocumentServiceImplTests {
     @Test
     fun `getAll throws IllegalArgumentException when page is negative`() {
         assertThrows(IllegalArgumentException::class.java) {
-            service.getAll(-1, 10, SortOption.NAME_ASC)
+            service.getAll(-1, 10, Sort.by(Sort.Direction.ASC, "name"))
         }
     }
 
     @Test
     fun `getAll throws IllegalArgumentException when limit is less or equal to zero`() {
         assertThrows(IllegalArgumentException::class.java) {
-            service.getAll(0, 0, SortOption.NAME_ASC)
+            service.getAll(0, 0, Sort.by(Sort.Direction.ASC, "name"))
         }
     }
 
@@ -43,9 +43,8 @@ internal class DocumentServiceImplTests {
     fun `getAll returns page of DocumentMetadataDTO`() {
         val page = 0
         val limit = 10
-        val sort = SortOption.NAME_ASC
+        val sort = Sort.by(Sort.Direction.ASC, "name")
         val meta = DocumentMetadata(
-            id = 1,
             name = "doc1",
             size = 100,
             contentType = "application/pdf",
@@ -53,7 +52,7 @@ internal class DocumentServiceImplTests {
         )
         meta.binaryContent = null
         val metaList = listOf(meta)
-        val pageable = PageRequest.of(page, limit, Sort.by(Sort.Direction.ASC, "name"))
+        val pageable = PageRequest.of(page, limit, sort)
         val pageImpl: Page<DocumentMetadata> = PageImpl(metaList, pageable, 1)
         every { repoMeta.findAll(pageable) } returns pageImpl
 
@@ -85,7 +84,6 @@ internal class DocumentServiceImplTests {
     fun `get returns DocumentMetadataDTO when document is found`() {
         val id = 1
         val meta = DocumentMetadata(
-            id = id,
             name = "doc1",
             size = 100,
             contentType = "application/pdf",
@@ -115,7 +113,6 @@ internal class DocumentServiceImplTests {
     fun `getData returns DocumentBinaryDataDTO when binary data is found`() {
         val id = 1
         val meta = DocumentMetadata(
-            id = id,
             name = "doc1",
             size = 100,
             contentType = "application/pdf",
@@ -154,7 +151,6 @@ internal class DocumentServiceImplTests {
     fun `create throws DocumentNameAlreadyExists when duplicate name exists`() {
         val name = "doc"
         every { repoMeta.findByName(name) } returns DocumentMetadata(
-            id = 1,
             name = name,
             size = 100,
             contentType = "application/pdf",
@@ -173,12 +169,12 @@ internal class DocumentServiceImplTests {
         val contentType = "application/pdf"
         val binaryContent = "content".toByteArray()
         every { repoMeta.findByName(name) } returns null
-        every { repoMeta.save(any()) } answers { firstArg<DocumentMetadata>().apply { id = 1 } }
+        every { repoMeta.save(any()) } answers { firstArg() }
 
         val result = service.create(name, contentType, binaryContent)
 
         assertNotNull(result)
-        assertEquals(1, result.id)
+        assertEquals(0, result.id)
         assertEquals(name, result.name)
         assertEquals(binaryContent.size, result.size)
         assertEquals(contentType, result.contentType)
@@ -194,26 +190,24 @@ internal class DocumentServiceImplTests {
 
     @Test
     fun `modify throws IllegalArgumentException when name is blank`() {
-        val id = 1
         assertThrows(IllegalArgumentException::class.java) {
-            service.modify(id, "   ", "application/pdf", "newContent".toByteArray())
+            service.modify(1, "   ", "application/pdf", "newContent".toByteArray())
         }
     }
 
     @Test
     fun `modify throws IllegalArgumentException when contentType is blank`() {
-        val id = 1
         assertThrows(IllegalArgumentException::class.java) {
-            service.modify(id, "newName", "   ", "newContent".toByteArray())
+            service.modify(1, "newName", "   ", "newContent".toByteArray())
         }
     }
 
     @Test
-    fun `modify throws DocumentNotFoundException when document not found`() {
+    fun `modify throws NotFoundException when document not found`() {
         val id = 1
         every { repoMeta.findById(id) } returns Optional.empty()
 
-        val exception = assertThrows(DocumentNotFoundException::class.java) {
+        val exception = assertThrows(NotFoundException::class.java) {
             service.modify(id, "newName", "application/pdf", "newContent".toByteArray())
         }
         assertEquals("File not found: $id", exception.message)
@@ -223,7 +217,6 @@ internal class DocumentServiceImplTests {
     fun `modify returns DocumentMetadataDTO when valid parameters provided`() {
         val id = 1
         val originalMeta = DocumentMetadata(
-            id = id,
             name = "oldName",
             size = 100,
             contentType = "application/pdf",
@@ -236,18 +229,14 @@ internal class DocumentServiceImplTests {
         )
         originalMeta.binaryContent = originalBinary
         every { repoMeta.findById(id) } returns Optional.of(originalMeta)
+        every { repoMeta.save(any()) } answers { firstArg() }
 
-        val newName = "newName"
-        val newContentType = "application/pdf"
-        val newBinaryContent = "newContent".toByteArray()
-        every { repoMeta.save(any()) } answers { firstArg<DocumentMetadata>() }
-
-        val result = service.modify(id, newName, newContentType, newBinaryContent)
+        val result = service.modify(id, "newName", "application/pdf", "newContent".toByteArray())
 
         assertNotNull(result)
-        assertEquals(newName, result.name)
-        assertEquals(newBinaryContent.size, result.size)
-        assertEquals(newContentType, result.contentType)
+        assertEquals("newName", result.name)
+        assertEquals("application/pdf", result.contentType)
+        assertEquals("newContent".toByteArray().size, result.size)
     }
 
     /** --------------------delete----------------------- **/
@@ -259,11 +248,11 @@ internal class DocumentServiceImplTests {
     }
 
     @Test
-    fun `delete throws DocumentNotFoundException when document not found`() {
+    fun `delete throws NotFoundException when document not found`() {
         val id = 1
         every { repoMeta.findById(id) } returns Optional.empty()
 
-        val exception = assertThrows(DocumentNotFoundException::class.java) {
+        val exception = assertThrows(NotFoundException::class.java) {
             service.delete(id)
         }
         assertEquals("File not found: $id", exception.message)
@@ -273,7 +262,6 @@ internal class DocumentServiceImplTests {
     fun `delete calls deleteById when document exists`() {
         val id = 1
         val meta = DocumentMetadata(
-            id = id,
             name = "doc",
             size = 100,
             contentType = "application/pdf",
@@ -288,5 +276,3 @@ internal class DocumentServiceImplTests {
         verify(exactly = 1) { repoMeta.deleteById(id) }
     }
 }
-
- */

@@ -3,7 +3,7 @@ package it.daniele.temporaryjobplacement.integration
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import it.daniele.temporaryjobplacement.dtos.contact.ContactDTO
-import it.daniele.temporaryjobplacement.dtos.UpdateContactDTO
+import it.daniele.temporaryjobplacement.dtos.contact.UpdateContactDTO
 import it.daniele.temporaryjobplacement.dtos.contact.AddressDTO
 import it.daniele.temporaryjobplacement.dtos.contact.EmailDTO
 import it.daniele.temporaryjobplacement.dtos.contact.TelephoneDTO
